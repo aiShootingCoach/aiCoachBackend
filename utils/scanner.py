@@ -112,18 +112,8 @@ def scan(image_path):
 
     results = pose.process(image_rgb)
     pose_data = to_json(results.pose_landmarks.landmark)
-    print(pose_data)
-    visualization(results.pose_landmarks.landmark, image, mp_pose, mp_drawing, results=results)
-    # pose_landmarks = results.pose_landmarks.landmark
-    # right_shoulder = pose_landmarks[12]
-    # right_elbow = pose_landmarks[14]
-    # right_wrist = pose_landmarks[16]
-    #
-    # right_elbow_angle = calculate_angle(right_shoulder, right_elbow, right_wrist)
-    #
-    # print(right_elbow_angle)
-    #
-    #
+    # print(pose_data)
+    return pose_data
 
 
 
