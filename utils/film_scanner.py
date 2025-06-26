@@ -6,50 +6,53 @@ import scanner
 import similarity
 import feedback
 
+def precantage_output(pose_data):
+     follow = pose_data['follow'][1]
+     gather = pose_data['gather'][1]
+     loading = pose_data['loading'][1]
+     release = pose_data['release'][1]
+     follow = (10000 - follow)/100
+     gather = (10000 - gather)/100
+     loading = (10000 - loading)/100
+     release = (10000 - release)/100
+     out = {'follow': follow, 'gather': gather, 'loading': loading, 'release': release}
+     return out
+
 def compare_two():
+    # Compare two specific frames for testing purposes
     path1 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130022_1.jpg'
     path2 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130025_1.jpg'
     user_data1 = scanner.scan(path1)
     user_data2 = scanner.scan(path2)
     print(user_data1)
     print(user_data2)
-    # difference = {
-    #     "right_elbow_angle": user_data["right_elbow_angle"] - exemplar_data["right_elbow_angle"],
-    #     "right_wrist_angle": user_data["right_wrist_angle"] - exemplar_data["right_wrist_angle"],
-    #     "right_shoulder_angle": user_data["right_shoulder_angle"] - exemplar_data["right_shoulder_angle"],
-    #     "right_hip_angle": user_data["right_hip_angle"] - exemplar_data["right_hip_angle"],
-    #     "right_knee_angle": user_data["right_knee_angle"] - exemplar_data["right_knee_angle"],
-    #     "left_elbow_angle": user_data["left_elbow_angle"] - exemplar_data["left_elbow_angle"],
-    #     "left_wrist_angle": user_data["left_wrist_angle"] - exemplar_data["left_wrist_angle"],
-    #     "left_hip_angle": user_data["left_hip_angle"] - exemplar_data["left_hip_angle"],
-    #     "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"]
-    # }
-    # print(difference)
-    # print(similarity.compare_with_exemplary_data(user_data))
-
 
 def differences(path, stage):
+    # Calculate the difference in joint angles between a frame and exemplary data for a given stage
     if not path or path == "":
-        print(f"Błąd: Nieprawidłowa ścieżka do pliku dla etapu {stage}")
+        print(f"Error: Invalid file path for stage {stage}")
         return None
 
+    # Scan the frame to get user joint angles
     user_data = scanner.scan(path)
     if user_data is None:
-        print(f"Błąd: Nie udało się przeanalizować klatki dla etapu {stage}")
+        print(f"Error: Failed to analyze frame for stage {stage}")
         return None
 
+    # Load exemplary data for the specified stage
     exemplary_data_path = f'/home/kacper/zajecia_inf/PythonProject/data/exemplary_data/{stage}.json'
     if not os.path.exists(exemplary_data_path):
-        print(f"Błąd: Brak pliku wzorcowego dla etapu {stage}")
+        print(f"Error: Exemplary data file for stage {stage} not found")
         return None
 
     try:
         with open(exemplary_data_path, 'r') as f:
             exemplar_data = json.load(f)
     except json.JSONDecodeError:
-        print(f"Błąd: Nieprawidłowy format pliku wzorcowego dla etapu {stage}")
+        print(f"Error: Invalid format of exemplary data file for stage {stage}")
         return None
 
+    # Compute angle differences between user and exemplary data
     difference = {
         "right_elbow_angle": user_data["right_elbow_angle"] - exemplar_data["right_elbow_angle"],
         "right_wrist_angle": user_data["right_wrist_angle"] - exemplar_data["right_wrist_angle"],
@@ -64,43 +67,40 @@ def differences(path, stage):
 
     return difference
 
-
 def get_newest_file(directory):
+    # Retrieve the most recently modified file in the specified directory
     files = [os.path.join(directory, f) for f in os.listdir(directory)]
-
     if not files:
         return None
-
     newest_file = max(files, key=os.path.getmtime)
     return newest_file
 
 def is_frame_path_used(most_similars_file, frame_path):
-
+    # Check if a frame has already been assigned to any stage
     for value in most_similars_file.values():
         if value[0] == frame_path:
             return True
     return False
 
-
 def scan_film(directory):
+    # Process a video to find the best frames for each basketball shot stage
     current_dir = os.path.dirname(os.path.abspath(__file__))
     feedback_file = os.path.join(os.path.dirname(current_dir), "data", "feedback.json")
 
+    # Get the newest video file
     newest_file = get_newest_file(directory)
-    most_similars_file = {
-        "follow": ["", 1000],
-        "gather": ["", 1000],
-        "loading": ["", 1000],
-        "release": ["", 1000]
-    }
     if newest_file is None:
+        print("Error: No video files found in directory")
         return
 
+    # Open the video file
     cap = cv2.VideoCapture(newest_file)
     if not cap.isOpened():
-        print("Błąd: Nie można otworzyć pliku wideo")
+        print("Error: Unable to open video file")
         return
 
+    # Pass 1: Collect similarity scores for all frames
+    frame_scores = []  # List of (frame_path, [(filename, score), ...])
     try:
         frame_number = 0
         max_frames = 1000
@@ -109,98 +109,76 @@ def scan_film(directory):
             ret, frame = cap.read()
             if not ret:
                 break
-            print(f"klatka: {frame_number}")
+            print(f"Frame: {frame_number}")
+
+            # Save the frame to disk
             parent_dir = os.path.dirname(os.path.dirname(directory))
             frames_dir = os.path.join(parent_dir, "frames")
             os.makedirs(frames_dir, exist_ok=True)
             frame_filename = f"frame_{frame_number:04d}.jpg"
             frame_path = os.path.join(frames_dir, frame_filename)
             cv2.imwrite(frame_path, frame)
+
+            # Scan the frame to get joint angles
             scan = scanner.scan(frame_path)
             if scan is None:
-                # Jeśli skanowanie się nie powiodło, usuń klatkę i przejdź do następnej
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
-                print(f"Pominięto klatkę {frame_number} - błąd skanowania")
+                print(f"Skipped frame {frame_number} - scan error")
                 frame_number += frame_skip
                 continue
 
-            print(scan)
+            # Compute similarity scores against exemplary data
             similarity_scores = similarity.compare_with_exemplary_data(scan)
-
-            changed = False
-            tab_names = ["follow", "gather", "loading", "release"]
-            for i, (filename, score) in enumerate(similarity_scores):  # Rozpakowanie krotki
-                key = tab_names[i]
-                if score < most_similars_file[key][1] and not is_frame_path_used(most_similars_file, frame_path):
-                    if most_similars_file[key][0] != "" and os.path.exists(most_similars_file[key][0]) and most_similars_file[key][0] != frame_path:
-                        os.remove(most_similars_file[key][0])
-                    most_similars_file[key] = [frame_path, score]
-                    changed = True
-
-            if not changed:
-                os.remove(frame_path)
-                print(f"Removed frame: {frame_filename}")
-            else:
-                print(f"Saved frame: {frame_filename}")
-
+            print(similarity_scores)
+            frame_scores.append((frame_path, similarity_scores))
             frame_number += frame_skip
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
 
     finally:
-        print("\nMost similar frames:")
-        print(most_similars_file)
+        cap.release()
 
-        # feedback_data = {
-        #     "timestamp": datetime.now().isoformat(),
-        #     "shots": {}
-        # }
-        #
-        # for key, value in most_similars_file.items():
-        #     if value[0]:
-        #         diff_result = differences(value[0], key)
-        #         if diff_result is None:
-        #             feedback_data["shots"][key] = {
-        #                 "frame_path": value[0],
-        #                 "similarity_score": value[1],
-        #                 "feedback": "Nie udało się przeanalizować klatki"
-        #             }
-        #             continue
-        #
-        #         shot_feedback = feedback.analyze_shot_form(diff_result, key)
-        #         feedback_data["shots"][key] = {
-        #             "frame_path": value[0],
-        #             "similarity_score": value[1],
-        #             "feedback": shot_feedback
-        #         }
-        #
-        # try:
-        #     if os.path.exists(feedback_file):
-        #         with open(feedback_file, 'r') as f:
-        #             existing_data = json.load(f)
-        #         if not isinstance(existing_data, list):
-        #             existing_data = [existing_data]
-        #     else:
-        #         existing_data = []
-        #
-        #     existing_data.append(feedback_data)
-        #
-        #     with open(feedback_file, 'w') as f:
-        #         json.dump(existing_data, f, indent=4)
-        #
-        # except Exception as e:
-        #     print(f"Error saving feedback: {str(e)}")
-        #
-        # cap.release()
-        # cv2.destroyAllWindows()
+    # Pass 2: Assign frames to stages optimally
+    most_similars_file = {
+        "follow": ["", 100000],
+        "gather": ["", 100000],
+        "loading": ["", 100000],
+        "release": ["", 100000]
+    }
+    used_frames = set()
+    tab_names = ["follow", "gather", "loading", "release"]
 
+    # Assign the best frame to each stage based on lowest similarity score
+    for stage in tab_names:
+        best_score = 100000
+        best_frame = ""
+        for frame_path, scores in frame_scores:
+            for filename, score in scores:
+                if filename == f"{stage}.json" and score < best_score and frame_path not in used_frames:
+                    best_score = score
+                    best_frame = frame_path
+        if best_frame:
+            most_similars_file[stage] = [best_frame, best_score]
+            used_frames.add(best_frame)
+        else:
+            print(f"No suitable frame found for stage {stage}")
+
+    # Clean up unused frames
+    for frame_path, _ in frame_scores:
+        if frame_path not in used_frames and os.path.exists(frame_path):
+            os.remove(frame_path)
+            print(f"Removed frame: {os.path.basename(frame_path)}")
+
+    print("\nMost similar System: frames:")
+    print(most_similars_file)
+    print("\n")
+    print(precantage_output(most_similars_file))
 
 def main():
-    # compare_two()
+    # Main function to initiate video scanning
     current_dir = os.path.dirname(os.path.abspath(__file__))
     user_shots_dir = os.path.join(os.path.dirname(current_dir), "data", "user_shots")
     scan_film(user_shots_dir)
-
 
 if __name__ == '__main__':
     main()
