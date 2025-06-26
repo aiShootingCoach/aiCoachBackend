@@ -1,17 +1,5 @@
 def analyze_shot_form(angle_differences, stage=None):
-    """
-    Analyzes basketball shot form based on angle differences from perfect form.
 
-    Args:
-        angle_differences: Dict or list of dicts with angle differences (player_angle - perfect_form_angle).
-                           Positive means too extended, negative means too flexed.
-                           If a single dict, specify the stage. If a list, each dict represents a stage.
-        stage: Str, optional. Specifies the stage for a single dict ("loading", "gather", "release", "follow").
-
-    Returns:
-        Markdown-formatted string with analysis of issues and corrective suggestions.
-    """
-    # Initialize report
     report = "# Basketball Shot Form Analysis\n\n"
 
     # Handle single dict or list of dicts

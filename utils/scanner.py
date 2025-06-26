@@ -3,62 +3,37 @@ import mediapipe as mp
 import numpy as np
 import json
 import math
-
+import os
 import numpy as np
 
 
-def calculate_angle(a, b, c, min_visibility=0.5, use_world_landmarks=False):
-    """
-    Calculate the angle between three points in 3D space.
+def calculate_angle(first_point, mid_point, last_point):
+    # Używamy tylko x i y, pomijamy z
+    a = np.array([first_point.x, first_point.y])
+    b = np.array([mid_point.x, mid_point.y])
+    c = np.array([last_point.x, last_point.y])
 
-    Args:
-        a, b, c: Landmark objects (from pose_landmarks or pose_world_landmarks).
-        min_visibility: Minimum visibility threshold for reliable points.
-        use_world_landmarks: If True, use pose_world_landmarks (metric coordinates).
+    # Obliczamy wektory
+    ba = a - b
+    bc = c - b
 
-    Returns:
-        Angle in degrees, or None if points are unreliable.
-    """
-    # Check visibility
-    if (a.visibility < min_visibility or
-            b.visibility < min_visibility or
-            c.visibility < min_visibility):
-        return None  # Skip if any point has low visibility
+    # Obliczamy kąt między wektorami
+    cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+    # Zabezpieczenie przed błędami numerycznymi
+    cosine_angle = np.clip(cosine_angle, -1.0, 1.0)
 
-    # Use world landmarks (meters) or normalized landmarks
-    if use_world_landmarks:
-        a_vec = np.array([a.x, a.y, a.z])
-        b_vec = np.array([b.x, b.y, b.z])
-        c_vec = np.array([c.x, c.y, c.z])
-    else:
-        a_vec = np.array([a.x, a.y, a.z])
-        b_vec = np.array([b.x, b.y, b.z])
-        c_vec = np.array([c.x, c.y, c.z])
-
-    # Create vectors
-    ab = a_vec - b_vec
-    bc = c_vec - b_vec
-
-    # Check for near-zero vectors
-    magnitude_ab = np.linalg.norm(ab)
-    magnitude_bc = np.linalg.norm(bc)
-    if magnitude_ab < 1e-6 or magnitude_bc < 1e-6:
-        return None  # Avoid division by zero
-
-    # Calculate angle
-    dot_product = np.dot(ab, bc)
-    cosine_angle = dot_product / (magnitude_ab * magnitude_bc)
-    cosine_angle = np.clip(cosine_angle, -1.0, 1.0)  # Ensure numerical stability
     angle = np.arccos(cosine_angle)
-    angle_degrees = np.degrees(angle)
+    angle = np.degrees(angle)
 
-    return round(angle_degrees, 2)
+    return angle
+
+
 def visualization(landmarks, image, mp_pose, mp_drawing, results=None):
     if results.pose_landmarks:
         mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
         cv2.imshow("Pose Estimation", image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        cv2.waitKey()
+        # cv2.destroyAllWindows()
 def to_json(landmarks):
 
     right_shoulder = landmarks[12]
@@ -68,7 +43,9 @@ def to_json(landmarks):
     right_hip = landmarks[24]
     right_knee = landmarks[26]
     right_ankle = landmarks[28]
-
+    # print(f"x: {right_shoulder.x}, y:{right_shoulder.y}, z:{right_shoulder.z}")
+    # print(f"x: {right_elbow.x}, y:{right_elbow.y}, z:{right_elbow.z}")
+    # print(f"x: {right_wrist.x}, y:{right_wrist.y}, z:{right_wrist.z}")
     right_elbow_angle = calculate_angle(right_shoulder, right_elbow, right_wrist)
     right_wrist_angle = calculate_angle(right_elbow, right_wrist, right_finger)
     right_shoulder_angle = calculate_angle(right_hip,right_shoulder,  right_elbow)
@@ -102,24 +79,34 @@ def to_json(landmarks):
 
     return pose_data
 
+
 def scan(image_path):
+    if not os.path.exists(image_path):
+        print(f"Błąd: Plik nie istnieje: {image_path}")
+        return None
+
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
     mp_drawing = mp.solutions.drawing_utils
 
     image = cv2.imread(image_path)
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if image is None:
+        print(f"Błąd: Nie można odczytać obrazu: {image_path}")
+        return None
 
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = pose.process(image_rgb)
+
+    if not results.pose_landmarks:
+        print(f"Błąd: Nie wykryto punktów orientacyjnych w obrazie: {image_path}")
+        return None
+
     pose_data = to_json(results.pose_landmarks.landmark)
-    # print(pose_data)
     return pose_data
 
 
-
-
 def main():
-    scan("/home/kacper/zajecia_inf/PythonProject/data/training_data/gather7.png")
+    scan("/home/kacper/zajecia_inf/PythonProject/data/training_data/gather.png")
 
 if __name__ == "__main__":
     main()
