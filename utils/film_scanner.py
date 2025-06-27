@@ -6,15 +6,20 @@ import scanner
 import similarity
 import feedback
 
+
+def save_feedback_to_json(data, filename):
+    with open(filename, 'w') as plik:
+        json.dump(data, plik, indent=4)
+
 def precantage_output(pose_data):
      follow = pose_data['follow'][1]
      gather = pose_data['gather'][1]
      loading = pose_data['loading'][1]
      release = pose_data['release'][1]
-     follow = (10000 - follow)/100
-     gather = (10000 - gather)/100
-     loading = (10000 - loading)/100
-     release = (10000 - release)/100
+     follow = format((10000 - follow)/10000,'.2%')
+     gather = format((10000 - gather)/10000,'.2%')
+     loading = format((10000 - loading)/10000,'.2%')
+     release = format((10000 - release)/10000,'.2%')
      out = {'follow': follow, 'gather': gather, 'loading': loading, 'release': release}
      return out
 
@@ -62,7 +67,8 @@ def differences(path, stage):
         "left_elbow_angle": user_data["left_elbow_angle"] - exemplar_data["left_elbow_angle"],
         "left_wrist_angle": user_data["left_wrist_angle"] - exemplar_data["left_wrist_angle"],
         "left_hip_angle": user_data["left_hip_angle"] - exemplar_data["left_hip_angle"],
-        "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"]
+        "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"],
+        # "left_shoulder_angle": user_data["left_shoulder_angle"] - exemplar_data["left_shoulder_angle"]
     }
 
     return difference
@@ -82,25 +88,28 @@ def is_frame_path_used(most_similars_file, frame_path):
             return True
     return False
 
-def scan_film(directory):
-    # Process a video to find the best frames for each basketball shot stage
+def scan_film(file_path):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     feedback_file = os.path.join(os.path.dirname(current_dir), "data", "feedback.json")
 
-    # Get the newest video file
-    newest_file = get_newest_file(directory)
+    newest_file = file_path
     if newest_file is None:
-        print("Error: No video files found in directory")
+        print("Błąd: Brak plików wideo w katalogu")
         return
 
-    # Open the video file
     cap = cv2.VideoCapture(newest_file)
     if not cap.isOpened():
-        print("Error: Unable to open video file")
+        print("Błąd: Nie można otworzyć pliku wideo")
         return
 
-    # Pass 1: Collect similarity scores for all frames
-    frame_scores = []  # List of (frame_path, [(filename, score), ...])
+    # Get video properties
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
+    # Check if video is in portrait mode (typical for phone videos)
+    is_portrait = height > width
+
+    frame_scores = []
     try:
         frame_number = 0
         max_frames = 1000
@@ -109,26 +118,28 @@ def scan_film(directory):
             ret, frame = cap.read()
             if not ret:
                 break
-            print(f"Frame: {frame_number}")
-
-            # Save the frame to disk
+            
+            # Rotate frame if video is in portrait mode
+            if is_portrait:
+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            
+            print(f"klatka: {frame_number}")
             parent_dir = os.path.dirname(os.path.dirname(directory))
             frames_dir = os.path.join(parent_dir, "frames")
             os.makedirs(frames_dir, exist_ok=True)
             frame_filename = f"frame_{frame_number:04d}.jpg"
             frame_path = os.path.join(frames_dir, frame_filename)
             cv2.imwrite(frame_path, frame)
-
-            # Scan the frame to get joint angles
+            
+            # Rest of the code remains the same
             scan = scanner.scan(frame_path)
             if scan is None:
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
-                print(f"Skipped frame {frame_number} - scan error")
+                print(f"Pominięto klatkę {frame_number} - błąd skanowania")
                 frame_number += frame_skip
                 continue
 
-            # Compute similarity scores against exemplary data
             similarity_scores = similarity.compare_with_exemplary_data(scan)
             print(similarity_scores)
             frame_scores.append((frame_path, similarity_scores))
@@ -168,11 +179,23 @@ def scan_film(directory):
         if frame_path not in used_frames and os.path.exists(frame_path):
             os.remove(frame_path)
             print(f"Removed frame: {os.path.basename(frame_path)}")
+    all_feedback = []
+    percentage = precantage_output(most_similars_file)
+    for stage in tab_names:
+        feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage), stage)
+        stage_feedback = {
+            'stage': stage,
+            'result': percentage[stage],
+            'feedback':  feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage), stage)
+        }
+        all_feedback.append(stage_feedback)
 
+    with open(feedback_file, 'w') as plik:
+        json.dump(all_feedback, plik, indent=4)
     print("\nMost similar System: frames:")
     print(most_similars_file)
     print("\n")
-    print(precantage_output(most_similars_file))
+    print(percentage)
 
 def main():
     # Main function to initiate video scanning

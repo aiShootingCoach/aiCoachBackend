@@ -1,59 +1,152 @@
+weights = {
+    "loading": {
+        "Right": {
+            "Wrist": 4,
+            "Elbow": 7,
+            "Shoulder": 9,
+            "Hip": 8,
+            "Knee": 7
+        },
+        "Left": {
+            "Wrist": 3,
+            "Elbow": 6,
+            "Shoulder": 7,
+            "Hip": 8,
+            "Knee": 7
+        }
+    },
+    "gather": {
+        "Right": {
+            "Wrist": 8,
+            "Elbow": 10,
+            "Shoulder": 8,
+            "Hip": 9,
+            "Knee": 9
+        },
+        "Left": {
+            "Wrist": 4,
+            "Elbow": 4,
+            "Shoulder": 4,
+            "Hip": 5,
+            "Knee": 5
+        }
+    },
+    "release": {
+        "Right": {
+            "Wrist": 10,
+            "Elbow": 9,
+            "Shoulder": 8,
+            "Hip": 7,
+            "Knee": 6
+        },
+        "Left": {
+            "Wrist": 5,
+            "Elbow": 6,
+            "Shoulder": 7,
+            "Hip": 6,
+            "Knee": 6
+        }
+    },
+    "follow": {
+        "Right": {
+            "Wrist": 9,
+            "Elbow": 8,
+            "Shoulder": 9,
+            "Hip": 6,
+            "Knee": 5
+        },
+        "Left": {
+            "Wrist": 4,
+            "Elbow": 5,
+            "Shoulder": 6,
+            "Hip": 6,
+            "Knee": 5
+        }
+    }
+}
 def analyze_shot_form(angle_differences, stage=None):
-
-    report = "# Basketball Shot Form Analysis\n\n"
-
-    # Handle single dict or list of dicts
-    if isinstance(angle_differences, dict):
-        if not stage:
-            stage = "release"  # Default to release if stage not specified
-        stages_data = [(stage, angle_differences)]
-    else:
-        stages = ["loading", "gather", "release", "follow"]
-        stages_data = [(stages[i], data) for i, data in enumerate(angle_differences[:4])]
-
-    # Analyze each stage
-    for stage_name, differences in stages_data:
-        report += f"## {stage_name.capitalize()} Stage\n\n"
-        issues = []
-        corrections = []
-
-        for angle_name, diff in differences.items():
-            if diff > 0:
-                issue, correction = get_angle_feedback(angle_name, stage_name, "more")
-                issues.append(f"- **{angle_name.replace('_', ' ').title()} (+{diff}°)**: Too extended. {issue}")
-                corrections.append(f"- **{angle_name.replace('_', ' ').title()}**: {correction}")
-            elif diff < 0:
-                issue, correction = get_angle_feedback(angle_name, stage_name, "less")
-                issues.append(f"- **{angle_name.replace('_', ' ').title()} ({diff}°)**: Too flexed. {issue}")
-                corrections.append(f"- **{angle_name.replace('_', ' ').title()}**: {correction}")
-
-        # Check for asymmetry in hips and knees
-        if "right_hip_angle" in differences and "left_hip_angle" in differences:
-            if abs(differences["right_hip_angle"] - differences["left_hip_angle"]) > 10:
-                issues.append(
-                    "- **Hip Asymmetry**: Significant difference between right and left hip angles. Indicates uneven weight distribution or tilted posture.")
-                corrections.append("- **Hips**: Ensure balanced stance with equal hip flexion/extension for stability.")
-
-        if "right_knee_angle" in differences and "left_knee_angle" in differences:
-            if abs(differences["right_knee_angle"] - differences["left_knee_angle"]) > 10:
-                issues.append(
-                    "- **Knee Asymmetry**: Significant difference between right and left knee angles. Suggests favoring one leg, affecting balance.")
-                corrections.append(
-                    "- **Knees**: Maintain symmetrical knee angles during the shot for better stability.")
-
-        # Add to report
-        if issues:
-            report += "### Issues Identified\n" + "\n".join(issues) + "\n\n"
-            report += "### Corrective Suggestions\n" + "\n".join(corrections) + "\n\n"
-        else:
-            report += "No significant issues detected in this stage.\n\n"
-
-    report += "## General Recommendations\n"
-    report += "- Practice stage-specific drills (e.g., squat jumps for loading, form shooting for release).\n"
-    report += "- Focus on symmetry between left and right sides for hips and knees.\n"
-    report += "- Use video analysis to confirm angle improvements during practice.\n"
+    angle_scores = {
+        "right_elbow_angle": angle_differences["right_elbow_angle"] * weights[stage]["Right"]["Elbow"],
+        "right_wrist_angle": angle_differences["right_wrist_angle"] * weights[stage]["Right"]["Wrist"],
+        "right_shoulder_angle": angle_differences["right_shoulder_angle"] * weights[stage]["Right"]["Shoulder"],
+        "right_hip_angle": angle_differences["right_hip_angle"] * weights[stage]["Right"]["Hip"],
+        "right_knee_angle": angle_differences["right_knee_angle"] * weights[stage]["Right"]["Knee"],
+        "left_elbow_angle": angle_differences["left_elbow_angle"] * weights[stage]["Left"]["Elbow"],
+        "left_wrist_angle": angle_differences["left_wrist_angle"] * weights[stage]["Left"]["Wrist"],
+        # "left_shoulder_angle": angle_differences["left_shoulder_angle"] * weights[stage]["Left"]["Shoulder"],
+        "left_hip_angle": angle_differences["left_hip_angle"] * weights[stage]["Left"]["Hip"],
+        "left_knee_angle": angle_differences["left_knee_angle"] * weights[stage]["Left"]["Knee"]
+    }
+    title = "# Basketball Shot Form Analysis\n\n"
+    report = {}
+    for angle_name, score in angle_scores.items():
+        issue = ""
+        if score > 40:
+            condition = "more"
+            issue = get_angle_feedback(angle_name, stage, condition)
+        elif score < -40:
+            condition = "less"
+            issue = get_angle_feedback(angle_name, stage, condition)
+        if issue != "":
+            report[angle_name] = issue
 
     return report
+
+
+
+
+    # # Handle single dict or list of dicts
+    # if isinstance(angle_differences, dict):
+    #     if not stage:
+    #         stage = "release"  # Default to release if stage not specified
+    #     stages_data = [(stage, angle_differences)]
+    # else:
+    #     stages = ["loading", "gather", "release", "follow"]
+    #     stages_data = [(stages[i], data) for i, data in enumerate(angle_differences[:4])]
+    #
+    # # Analyze each stage
+    # for stage_name, differences in stages_data:
+    #     report += f"## {stage_name.capitalize()} Stage\n\n"
+    #     issues = []
+    #     corrections = []
+    #
+    #     for angle_name, diff in differences.items():
+    #         if diff > 0:
+    #             issue, correction = get_angle_feedback(angle_name, stage_name, "more")
+    #             issues.append(f"- **{angle_name.replace('_', ' ').title()} (+{diff}°)**: Too extended. {issue}")
+    #             corrections.append(f"- **{angle_name.replace('_', ' ').title()}**: {correction}")
+    #         elif diff < 0:
+    #             issue, correction = get_angle_feedback(angle_name, stage_name, "less")
+    #             issues.append(f"- **{angle_name.replace('_', ' ').title()} ({diff}°)**: Too flexed. {issue}")
+    #             corrections.append(f"- **{angle_name.replace('_', ' ').title()}**: {correction}")
+    #
+    #     # Check for asymmetry in hips and knees
+    #     if "right_hip_angle" in differences and "left_hip_angle" in differences:
+    #         if abs(differences["right_hip_angle"] - differences["left_hip_angle"]) > 10:
+    #             issues.append(
+    #                 "- **Hip Asymmetry**: Significant difference between right and left hip angles. Indicates uneven weight distribution or tilted posture.")
+    #             corrections.append("- **Hips**: Ensure balanced stance with equal hip flexion/extension for stability.")
+    #
+    #     if "right_knee_angle" in differences and "left_knee_angle" in differences:
+    #         if abs(differences["right_knee_angle"] - differences["left_knee_angle"]) > 10:
+    #             issues.append(
+    #                 "- **Knee Asymmetry**: Significant difference between right and left knee angles. Suggests favoring one leg, affecting balance.")
+    #             corrections.append(
+    #                 "- **Knees**: Maintain symmetrical knee angles during the shot for better stability.")
+    #
+    #     # Add to report
+    #     if issues:
+    #         report += "### Issues Identified\n" + "\n".join(issues) + "\n\n"
+    #         report += "### Corrective Suggestions\n" + "\n".join(corrections) + "\n\n"
+    #     else:
+    #         report += "No significant issues detected in this stage.\n\n"
+    #
+    # report += "## General Recommendations\n"
+    # report += "- Practice stage-specific drills (e.g., squat jumps for loading, form shooting for release).\n"
+    # report += "- Focus on symmetry between left and right sides for hips and knees.\n"
+    # report += "- Use video analysis to confirm angle improvements during practice.\n"
+    #
+    # return report
 
 
 def get_angle_feedback(angle_name, stage, condition):
