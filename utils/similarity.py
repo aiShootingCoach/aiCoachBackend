@@ -1,4 +1,6 @@
 import json
+from pathlib import Path
+
 import numpy as np
 import os
 from typing import Dict, List, Union
@@ -78,7 +80,7 @@ def read_json_file(file_path: str) -> dict:
 
 def print_json_structure():
     # Print the structure (keys) of all JSON files in the exemplary data directory
-    ex_path = '/home/kacper/zajecia_inf/PythonProject/data/exemplary_data/'
+    ex_path =Path(__file__).parent / f"../data/exemplary_data/"
     for file in os.listdir(ex_path):
         if file.endswith('.json'):
             data = read_json_file(os.path.join(ex_path, file))
@@ -122,7 +124,8 @@ def get_weight(angle_name, stage_name) -> float:
 
 def compare_with_exemplary_data(user_data: dict) -> List[tuple]:
     # Compare user joint angles with exemplary data and compute similarity scores
-    ex_path = '/home/kacper/zajecia_inf/PythonProject/data/exemplary_data/'
+    # ex_path = '/home/kacper/zajecia_inf/PythonProject/data/exemplary_data/'
+    ex_path = Path(__file__).parent / "../data/exemplary_data"
     files = os.listdir(ex_path)
     similarity_results = []
 

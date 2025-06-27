@@ -2,3 +2,5 @@ opencv-python
 mediapipe
 numpy
 scipy
+fastapi[standard]
+python-multipart

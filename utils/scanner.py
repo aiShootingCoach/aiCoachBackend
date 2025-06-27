@@ -4,7 +4,9 @@ import numpy as np
 import json
 import math
 import os
-import similarity
+
+from utils import similarity
+
 
 def calculate_angle(first_point, mid_point, last_point):
     # Calculate the angle between three points using 2D coordinates (x, y)

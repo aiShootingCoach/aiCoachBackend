@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import cv2
 import scanner
 import json
@@ -6,7 +8,7 @@ import json
 
 def scan_ex_data(path):
     # Scan exemplary images and save joint angles as JSON files
-    save_path = '/home/kacper/zajecia_inf/PythonProject/data/exemplary_data/'
+    save_path = Path(__file__).parent / "../data/exemplary_data"
     files = os.listdir(path)
 
     # Process each image in the directory
@@ -21,8 +23,3 @@ def scan_ex_data(path):
         save_file.write(json_txt)
         save_file.close()
     return 0
-
-
-if __name__ == '__main__':
-    # Run the scanning process for exemplary data
-    scan_ex_data('/home/kacper/zajecia_inf/PythonProject/data/training_data')

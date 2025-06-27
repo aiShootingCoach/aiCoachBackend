@@ -1,10 +1,10 @@
 import os
 from datetime import datetime
+from pathlib import Path
+
 import cv2
 import json
-import scanner
-import similarity
-import feedback
+from utils import scanner, feedback, similarity
 
 
 def save_feedback_to_json(data, filename):
@@ -45,7 +45,7 @@ def differences(path, stage):
         return None
 
     # Load exemplary data for the specified stage
-    exemplary_data_path = f'/home/kacper/zajecia_inf/PythonProject/data/exemplary_data/{stage}.json'
+    exemplary_data_path =Path(__file__).parent / f"../data/exemplary_data/{stage}.json"
     if not os.path.exists(exemplary_data_path):
         print(f"Error: Exemplary data file for stage {stage} not found")
         return None
@@ -89,8 +89,8 @@ def is_frame_path_used(most_similars_file, frame_path):
     return False
 
 def scan_film(file_path):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    feedback_file = os.path.join(os.path.dirname(current_dir), "data", "feedback.json")
+    current_dir = Path(__file__)
+    feedback_file = current_dir / "data/feedback.json"
 
     newest_file = file_path
     if newest_file is None:
@@ -124,8 +124,9 @@ def scan_film(file_path):
                 frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             
             print(f"klatka: {frame_number}")
-            parent_dir = os.path.dirname(os.path.dirname(directory))
-            frames_dir = os.path.join(parent_dir, "frames")
+            # parent_dir = os.path.dirname(os.path.dirname(directory))
+            frames_dir = Path(__file__).parent / "frames"
+
             os.makedirs(frames_dir, exist_ok=True)
             frame_filename = f"frame_{frame_number:04d}.jpg"
             frame_path = os.path.join(frames_dir, frame_filename)
