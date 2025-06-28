@@ -88,6 +88,33 @@ def is_frame_path_used(most_similars_file, frame_path):
             return True
     return False
 
+def verify_frame_order(frame_stages):
+    def get_frame_number(frame_path):
+        if not frame_path:
+            return -1
+        return int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+
+    loading_frame = get_frame_number(frame_stages['loading'][0])
+    gather_frame = get_frame_number(frame_stages['gather'][0])
+    release_frame = get_frame_number(frame_stages['release'][0])
+    follow_frame = get_frame_number(frame_stages['follow'][0])
+
+    return (loading_frame < gather_frame < release_frame < follow_frame)
+
+def find_next_best_frame(frame_scores, stage, used_frames, min_frame, max_frame):
+
+    best_score = 100000
+    best_frame = ""
+    for frame_path, scores in frame_scores:
+        frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+        if (frame_path not in used_frames and 
+            min_frame <= frame_num <= max_frame):
+            for filename, score in scores:
+                if filename == f"{stage}.json" and score < best_score:
+                    best_score = score
+                    best_frame = frame_path
+    return best_frame, best_score
+
 def scan_film(file_path):
     current_dir = Path(__file__).resolve().parent.parent
     feedback_file = current_dir / "data" / "feedback.json"
@@ -153,37 +180,60 @@ def scan_film(file_path):
         cap.release()
 
     # Pass 2: Assign frames to stages optimally
-    most_similars_file = {
-        "follow": ["", 100000],
-        "gather": ["", 100000],
-        "loading": ["", 100000],
-        "release": ["", 100000]
-    }
-    used_frames = set()
-    tab_names = ["follow", "gather", "loading", "release"]
+    max_attempts = 10
+    attempt = 0
+    
+    while attempt < max_attempts:
+        most_similars_file = {
+            "loading": ["", 100000],
+            "gather": ["", 100000],
+            "release": ["", 100000],
+            "follow": ["", 100000]
+        }
+        used_frames = set()
 
-    # Assign the best frame to each stage based on lowest similarity score
-    for stage in tab_names:
-        best_score = 100000
-        best_frame = ""
-        for frame_path, scores in frame_scores:
-            for filename, score in scores:
-                if filename == f"{stage}.json" and score < best_score and frame_path not in used_frames:
-                    best_score = score
-                    best_frame = frame_path
-        if best_frame:
-            most_similars_file[stage] = [best_frame, best_score]
-            used_frames.add(best_frame)
-        else:
-            print(f"No suitable frame found for stage {stage}")
+        # Finding best fit
+        for stage in ["loading", "gather", "release", "follow"]:
+            best_score = 100000
+            best_frame = ""
+            for frame_path, scores in frame_scores:
+                if frame_path not in used_frames:
+                    for filename, score in scores:
+                        if filename == f"{stage}.json" and score < best_score:
+                            best_score = score
+                            best_frame = frame_path
+            if best_frame:
+                most_similars_file[stage] = [best_frame, best_score]
+                used_frames.add(best_frame)
 
-    # Clean up unused frames
+        # checking if the order is correct
+        if verify_frame_order(most_similars_file):
+            break
+
+        # Deleting worst score and trying again
+        worst_score = max(score for _, score in most_similars_file.values())
+        worst_stage = next(stage for stage, (_, score) in most_similars_file.items() 
+                         if score == worst_score)
+        used_frames.remove(most_similars_file[worst_stage][0])
+        attempt += 1
+
+    if attempt == max_attempts:
+        print("Ostrzeżenie: Nie udało się znaleźć prawidłowej sekwencji klatek")
+    
+    # Deleting wastefull frames
     for frame_path, _ in frame_scores:
         if frame_path not in used_frames and os.path.exists(frame_path):
             os.remove(frame_path)
             print(f"Removed frame: {os.path.basename(frame_path)}")
+
+    # Clean up unused frames
+    # for frame_path, _ in frame_scores:
+    #     if frame_path not in used_frames and os.path.exists(frame_path):
+    #         os.remove(frame_path)
+    #         print(f"Removed frame: {os.path.basename(frame_path)}")
     all_feedback = []
     percentage = precantage_output(most_similars_file)
+    tab_names = ["follow", "gather", "loading", "release"]
     for stage in tab_names:
         feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage), stage)
         stage_feedback = {
