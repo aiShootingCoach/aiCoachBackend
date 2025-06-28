@@ -89,8 +89,10 @@ def is_frame_path_used(most_similars_file, frame_path):
     return False
 
 def scan_film(file_path):
-    current_dir = Path(__file__)
-    feedback_file = current_dir / "data/feedback.json"
+    current_dir = Path(__file__).resolve().parent.parent
+    feedback_file = current_dir / "data" / "feedback.json"
+
+    feedback_file.parent.mkdir(parents=True, exist_ok=True)
 
     newest_file = file_path
     if newest_file is None:
@@ -197,6 +199,7 @@ def scan_film(file_path):
     print(most_similars_file)
     print("\n")
     print(percentage)
+    return all_feedback
 
 def main():
     # Main function to initiate video scanning
