@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 import cv2
-import scanner
+from utils import scanner
 import json
 
 
@@ -17,7 +17,7 @@ def scan_ex_data(path):
         # Scan the image to extract joint angles
         json_data = scanner.scan(file_path)
         # Save the results to a JSON file
-        save_file = save_path + file[:-4] + '.json'
+        save_file = save_path / f"{file[:-4]}.json"
         save_file = open(save_file, 'w')
         json_txt = json.dumps(json_data)
         save_file.write(json_txt)

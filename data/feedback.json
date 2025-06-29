@@ -1,0 +1,98 @@
+[
+    {
+        "stage": "follow",
+        "result": "99.56%",
+        "feedback": {
+            "right_hip_angle": [
+                "Backward lean disrupts balance.",
+                "Extend hips fully but stay balanced."
+            ]
+        }
+    },
+    {
+        "stage": "gather",
+        "result": "98.25%",
+        "feedback": {
+            "right_elbow_angle": [
+                "Premature extension disrupts shot timing.",
+                "Keep elbow tucked for smooth transition to release."
+            ],
+            "right_wrist_angle": [
+                "Misaligns ball, disrupting release.",
+                "Maintain neutral wrist position."
+            ],
+            "right_hip_angle": [
+                "Premature extension disrupts timing.",
+                "Maintain slight hip bend for balance."
+            ],
+            "right_knee_angle": [
+                "Slows transition to release.",
+                "Extend knees slightly for smoother transition."
+            ],
+            "left_knee_angle": [
+                "Uneven posture affects balance.",
+                "Extend knees slightly for smoother transition."
+            ]
+        }
+    },
+    {
+        "stage": "loading",
+        "result": "93.65%",
+        "feedback": {
+            "right_elbow_angle": [
+                "Reduces power storage due to insufficient bend.",
+                "Bend the elbow more to store energy for the shot."
+            ],
+            "right_wrist_angle": [
+                "Rigid wrist limits snap potential.",
+                "Maintain neutral wrist position."
+            ],
+            "right_shoulder_angle": [
+                "Limits ball positioning.",
+                "Elevate shoulder slightly for better setup."
+            ],
+            "right_hip_angle": [
+                "Shallow squat reduces jump power.",
+                "Bend hips more for increased power."
+            ],
+            "right_knee_angle": [
+                "Excessive bend slows movement.",
+                "Reduce knee bend slightly for better mobility."
+            ],
+            "left_elbow_angle": [
+                "Interferes with shooting hand.",
+                "Extend guide elbow slightly for better control."
+            ],
+            "left_hip_angle": [
+                "Excessive bend unbalances stance.",
+                "Reduce hip bend slightly for better balance."
+            ],
+            "left_knee_angle": [
+                "Excessive bend unbalances stance.",
+                "Reduce knee bend slightly for better balance."
+            ]
+        }
+    },
+    {
+        "stage": "release",
+        "result": "99.37%",
+        "feedback": {
+            "right_shoulder_angle": [
+                "Strains shoulder, reducing consistency.",
+                "Relax shoulder during release."
+            ],
+            "right_hip_angle": [
+                "Overextension may cause backward lean.",
+                "Fully extend hips while maintaining balance."
+            ],
+            "right_knee_angle": [
+                "Incomplete drive limits elevation.",
+                "Fully extend knees for maximum shot power."
+            ],
+            "left_wrist_angle": [
+                "Pushes ball off-line.",
+                "Keep guide wrist neutral to avoid interference."
+            ]
+        }
+    }
+]

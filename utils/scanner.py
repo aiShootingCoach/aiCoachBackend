@@ -35,7 +35,6 @@ def visualization(landmarks, image, mp_pose, mp_drawing, results=None):
         mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
         cv2.imshow("Pose Estimation", image)
         cv2.waitKey()
-        # cv2.destroyAllWindows()
 
 def to_json(landmarks):
     # Convert pose landmarks to a dictionary of joint angles
@@ -68,6 +67,14 @@ def to_json(landmarks):
     left_hip_angle = calculate_angle(left_shoulder, left_hip, left_knee)
     left_knee_angle = calculate_angle(left_hip, left_knee, left_ankle)
 
+    if (right_wrist.y - right_shoulder.y) > 0:
+        right_top_diffrence = 1
+    else:
+        right_top_diffrence = 0
+    if left_wrist.y - left_shoulder.y > 0:
+        left_top_diffrence = 1
+    else:
+        left_top_diffrence = 0
     # Store angles in a dictionary
     pose_data = {
         "right_elbow_angle": right_elbow_angle,
@@ -79,6 +86,8 @@ def to_json(landmarks):
         "left_wrist_angle": left_wrist_angle,
         "left_hip_angle": left_hip_angle,
         "left_knee_angle": left_knee_angle,
+        "right_top_diffrence": right_top_diffrence,
+        "left_top_diffrence": left_top_diffrence,
     }
 
     return pose_data
