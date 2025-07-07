@@ -8,7 +8,7 @@ import re
 from utils import scanner, feedback, similarity
 
 TOP_CAP = 100000
-PERCENTAGE_BASE = 10000
+PERCENTAGE_BASE = 2500
 
 
 def save_feedback_to_json(data, filename):
@@ -21,10 +21,10 @@ def precantage_output(pose_data):
     gather = pose_data['gather'][1]
     loading = pose_data['loading'][1]
     release = pose_data['release'][1]
-    follow = format((PERCENTAGE_BASE - follow) / PERCENTAGE_BASE, '.2%')
-    gather = format((PERCENTAGE_BASE - gather) / PERCENTAGE_BASE, '.2%')
-    loading = format((PERCENTAGE_BASE - loading) / PERCENTAGE_BASE, '.2%')
-    release = format((PERCENTAGE_BASE - release) / PERCENTAGE_BASE, '.2%')
+    follow = round((PERCENTAGE_BASE - follow) / PERCENTAGE_BASE*100)
+    gather = round((PERCENTAGE_BASE - gather) / PERCENTAGE_BASE*100)
+    loading = round((PERCENTAGE_BASE - loading) / PERCENTAGE_BASE*100)
+    release = round((PERCENTAGE_BASE - release) / PERCENTAGE_BASE*100)
     out = {'follow': follow, 'gather': gather, 'loading': loading, 'release': release}
     return out
 

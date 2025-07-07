@@ -25,40 +25,40 @@ weights = {
         },
         "Left": {
             "Wrist": 4,
-            "Elbow": 4,
-            "Shoulder": 4,
-            "Hip": 5,
-            "Knee": 5
+            "Elbow": 8,
+            "Shoulder": 7,
+            "Hip": 9,
+            "Knee": 9
         }
     },
     "release": {
         "Right": {
             "Wrist": 10,
             "Elbow": 9,
-            "Shoulder": 8,
-            "Hip": 7,
+            "Shoulder": 10,
+            "Hip": 5,
             "Knee": 6
         },
         "Left": {
             "Wrist": 5,
             "Elbow": 6,
             "Shoulder": 7,
-            "Hip": 6,
+            "Hip": 5,
             "Knee": 6
         }
     },
     "follow": {
         "Right": {
             "Wrist": 9,
-            "Elbow": 8,
+            "Elbow": 9 ,
             "Shoulder": 9,
             "Hip": 6,
             "Knee": 5
         },
         "Left": {
-            "Wrist": 4,
-            "Elbow": 5,
-            "Shoulder": 6,
+            "Wrist": 9,
+            "Elbow": 9,
+            "Shoulder": 9,
             "Hip": 6,
             "Knee": 5
         }
