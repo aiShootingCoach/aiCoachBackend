@@ -6,6 +6,7 @@ import json
 import subprocess
 import re
 from utils import scanner, feedback, similarity
+import mediapipe as mp
 
 TOP_CAP = 100000
 PERCENTAGE_BASE = 2500
@@ -43,6 +44,10 @@ def compare_two():
 
 
 def differences(path, stage):
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
+
     if not path or path == "":
         print(f"Error: Invalid file path for stage {stage}")
         return None
@@ -71,6 +76,7 @@ def differences(path, stage):
         "left_hip_angle": user_data["left_hip_angle"] - exemplar_data["left_hip_angle"],
         "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"],
     }
+    pose.close()
     return difference
 
 
@@ -160,6 +166,10 @@ def scan_film(file_path, auto_rotate=True):
     }
 
     frame_scores = []
+    # Initialize MediaPipe Pose and drawing utilities
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
     try:
         frame_number = 0
         max_frames = 1000
@@ -197,6 +207,7 @@ def scan_film(file_path, auto_rotate=True):
 
     finally:
         cap.release()
+        pose.close()
 
     # Pass 2: Assign frames to stages optimally
     max_attempts = 10
