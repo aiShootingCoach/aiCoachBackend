@@ -1,61 +1,53 @@
 [
     {
         "stage": "follow",
-        "result": 96,
+        "result": 97,
         "feedback": {
-            "right_elbow_angle": [
-                "Excessive stiffness reduces fluidity.",
-                "Fully extend elbow but keep relaxed for smooth follow."
-            ],
             "right_wrist_angle": [
                 "Over-snap may affect consistency.",
                 "Ensure smooth downward wrist snap."
-            ],
-            "right_shoulder_angle": [
-                "Causes tension, reducing smoothness.",
-                "Keep shoulder relaxed for smooth follow."
             ],
             "right_hip_angle": [
                 "Backward lean disrupts balance.",
                 "Extend hips fully but stay balanced."
             ],
-            "left_elbow_angle": [
-                "Premature withdrawal disrupts balance.",
-                "Maintain slight bend in guide elbow."
+            "left_hip_angle": [
+                "Uneven extension reduces stability.",
+                "Fully extend hips for balanced landing."
             ],
-            "left_wrist_angle": [
-                "Premature withdrawal affects stability.",
-                "Maintain neutral guide wrist position."
+            "left_knee_angle": [
+                "Asymmetry affects landing.",
+                "Extend knees fully with symmetry for stable landing."
             ]
         }
     },
     {
         "stage": "gather",
-        "result": 86,
+        "result": 77,
         "feedback": {
             "right_elbow_angle": [
-                "Premature extension disrupts shot timing.",
-                "Keep elbow tucked for smooth transition to release."
+                "Delays shot preparation, causing rushed release.",
+                "Extend elbow slightly for better alignment."
             ],
             "right_wrist_angle": [
                 "Misaligns ball, disrupting release.",
                 "Maintain neutral wrist position."
             ],
             "right_shoulder_angle": [
-                "Disrupts body alignment.",
-                "Keep shoulder lower for consistent setup."
+                "Limits ball elevation.",
+                "Raise shoulder slightly for proper positioning."
             ],
             "right_hip_angle": [
                 "Premature extension disrupts timing.",
                 "Maintain slight hip bend for balance."
             ],
-            "right_knee_angle": [
-                "Slows transition to release.",
-                "Extend knees slightly for smoother transition."
-            ],
             "left_elbow_angle": [
-                "Pushes ball, affecting alignment.",
-                "Keep guide elbow slightly bent for proper setup."
+                "Interferes with shot setup.",
+                "Extend guide elbow slightly for alignment."
+            ],
+            "left_wrist_angle": [
+                "Interferes with setup.",
+                "Keep guide wrist neutral for alignment."
             ],
             "left_hip_angle": [
                 "Asymmetry disrupts balance.",
@@ -65,7 +57,7 @@
     },
     {
         "stage": "loading",
-        "result": 75,
+        "result": 85,
         "feedback": {
             "right_elbow_angle": [
                 "Reduces power storage due to insufficient bend.",
@@ -103,15 +95,27 @@
     },
     {
         "stage": "release",
-        "result": 98,
+        "result": 99,
         "feedback": {
+            "right_elbow_angle": [
+                "Early extension leads to flat trajectory.",
+                "Release with a slight elbow bend for better arc."
+            ],
+            "right_wrist_angle": [
+                "Excessive snap may cause erratic release.",
+                "Moderate wrist snap for better control."
+            ],
+            "right_shoulder_angle": [
+                "Strains shoulder, reducing consistency.",
+                "Relax shoulder during release."
+            ],
             "right_hip_angle": [
                 "Overextension may cause backward lean.",
                 "Fully extend hips while maintaining balance."
             ],
-            "left_wrist_angle": [
-                "Pushes ball off-line.",
-                "Keep guide wrist neutral to avoid interference."
+            "left_hip_angle": [
+                "Asymmetry causes imbalance.",
+                "Fully extend hips symmetrically for stability."
             ]
         }
     }

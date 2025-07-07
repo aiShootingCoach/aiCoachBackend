@@ -35,12 +35,17 @@ def precantage_output(pose_data):
 
 
 def compare_two():
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
+
     path1 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130022_1.jpg'
     path2 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130025_1.jpg'
-    user_data1 = scanner.scan(path1)
-    user_data2 = scanner.scan(path2)
+    user_data1 = scanner.scan(path1, pose)
+    user_data2 = scanner.scan(path2, pose)
     print(user_data1)
     print(user_data2)
+    pose.close()
 
 
 def differences(path, stage):
@@ -51,7 +56,7 @@ def differences(path, stage):
     if not path or path == "":
         print(f"Error: Invalid file path for stage {stage}")
         return None
-    user_data = scanner.scan(path)
+    user_data = scanner.scan(path, pose)
     if user_data is None:
         print(f"Error: Failed to analyze frame for stage {stage}")
         return None
@@ -170,6 +175,7 @@ def scan_film(file_path, auto_rotate=True):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
     mp_drawing = mp.solutions.drawing_utils
+
     try:
         frame_number = 0
         max_frames = 1000
@@ -191,7 +197,7 @@ def scan_film(file_path, auto_rotate=True):
             frame_path = os.path.join(frames_dir, frame_filename)
             cv2.imwrite(frame_path, frame)
 
-            scan = scanner.scan(frame_path)
+            scan = scanner.scan(frame_path, pose)
             if scan is None:
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
@@ -243,11 +249,11 @@ def scan_film(file_path, auto_rotate=True):
 
     if attempt == max_attempts:
         print("Error: Failed to find optimal frame assignment")
-
     # for frame_path, _ in frame_scores:
     #     if frame_path not in used_frames and os.path.exists(frame_path):
     #         os.remove(frame_path)
     #         print(f"Removed frame: {os.path.basename(frame_path)}")
+
 
     all_feedback = []
     percentage = precantage_output(most_similars_file)
