@@ -14,7 +14,7 @@ app = FastAPI()
 
 
 router = APIRouter()
-
+FRAMES_DIR = Path(__file__).resolve().parent.parent.parent / "utils" / "frames"
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "data" / "user_shots"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_SIZE = 2 * 1024 * 1024  # 100MB
@@ -52,18 +52,36 @@ async def upload_video(file: UploadFile = File(...)):
     frames = []
     for frame_path in return_json['frames']:
         try:
-            with open(frame_path, 'rb') as file:
+            with open(frame_path[0], 'rb') as file:
                 img_data = file.read()
                 img_base64 = base64.b64encode(img_data).decode('utf-8')
-                frames.append(img_base64)
+                add = [img_base64, frame_path[1]]
+                frames.append(add)
         except Exception as e:
             logging.error(f"Error reading frame {frame_path}: {e}")
+            add = ['null', frame_path[1]]
+            frames.append(add)
             continue
 
     response = {
         "feedback": return_json['feedback'],
         "frames": frames
     }
+
+    for file_path in FRAMES_DIR.glob("*.jpg"):
+        try:
+            file_path.unlink()
+            logging.info(f"Deleted frame: {file_path}")
+        except Exception as e:
+            logging.error(f"Error deleting frame {file_path}: {e}")
+
+        # Remove all files in the user_shots directory
+    for file_path in UPLOAD_DIR.glob("*.mp4"):
+        try:
+            file_path.unlink()
+            logging.info(f"Deleted video: {file_path}")
+        except Exception as e:
+            logging.error(f"Error deleting video {file_path}: {e}")
 
     return response
 

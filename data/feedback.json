@@ -66,7 +66,40 @@
     {
         "stage": "loading",
         "result": 75,
-        "feedback": {}
+        "feedback": {
+            "right_elbow_angle": [
+                "Reduces power storage due to insufficient bend.",
+                "Bend the elbow more to store energy for the shot."
+            ],
+            "right_wrist_angle": [
+                "Rigid wrist limits snap potential.",
+                "Maintain neutral wrist position."
+            ],
+            "right_shoulder_angle": [
+                "Limits ball positioning.",
+                "Elevate shoulder slightly for better setup."
+            ],
+            "right_hip_angle": [
+                "Shallow squat reduces jump power.",
+                "Bend hips more for increased power."
+            ],
+            "right_knee_angle": [
+                "Excessive bend slows movement.",
+                "Reduce knee bend slightly for better mobility."
+            ],
+            "left_elbow_angle": [
+                "Interferes with shooting hand.",
+                "Extend guide elbow slightly for better control."
+            ],
+            "left_hip_angle": [
+                "Excessive bend unbalances stance.",
+                "Reduce hip bend slightly for better balance."
+            ],
+            "left_knee_angle": [
+                "Excessive bend unbalances stance.",
+                "Reduce knee bend slightly for better balance."
+            ]
+        }
     },
     {
         "stage": "release",
