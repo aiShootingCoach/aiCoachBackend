@@ -92,16 +92,11 @@ def to_json(landmarks):
 
     return pose_data
 
-def scan(image_path):
+def scan(image_path, pose):
     # Process an image to extract joint angles using MediaPipe Pose
     if not os.path.exists(image_path):
         print(f"Error: File does not exist: {image_path}")
         return None
-
-    # Initialize MediaPipe Pose and drawing utilities
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose()
-    mp_drawing = mp.solutions.drawing_utils
 
     # Read and convert the image to RGB
     image = cv2.imread(image_path)
@@ -122,8 +117,11 @@ def scan(image_path):
 
 def main():
     # Test function to scan specific images and compare with exemplary data
-    print(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/zr.png")))
-    print(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/frame_0020.jpg")))
-
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
+    print(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/zr.png", pose)))
+    print(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/frame_0020.jpg", pose)))
+    pose.close()
 if __name__ == "__main__":
     main()
