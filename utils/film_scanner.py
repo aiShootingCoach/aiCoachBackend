@@ -22,9 +22,13 @@ def precantage_output(pose_data):
     loading = pose_data['loading'][1]
     release = pose_data['release'][1]
     follow = round((PERCENTAGE_BASE - follow) / PERCENTAGE_BASE*100)
+    if follow < 0: follow = 0
     gather = round((PERCENTAGE_BASE - gather) / PERCENTAGE_BASE*100)
+    if gather < 0: gather = 0
     loading = round((PERCENTAGE_BASE - loading) / PERCENTAGE_BASE*100)
+    if loading < 0: loading = 0
     release = round((PERCENTAGE_BASE - release) / PERCENTAGE_BASE*100)
+    if release < 0: release = 0
     out = {'follow': follow, 'gather': gather, 'loading': loading, 'release': release}
     return out
 
@@ -159,7 +163,7 @@ def scan_film(file_path, auto_rotate=True):
     try:
         frame_number = 0
         max_frames = 1000
-        frame_skip = 2
+        frame_skip = 5
         while frame_number < max_frames:
             ret, frame = cap.read()
             if not ret:
@@ -251,8 +255,10 @@ def scan_film(file_path, auto_rotate=True):
     print("\nMost similar System: frames:")
     print(most_similars_file)
     print("\n")
+    frames_end = [[most_similars_file['loading'][0],'loading'],[most_similars_file['gather'][0],'gather'],[most_similars_file['release'][0],'release'],[most_similars_file['follow'][0],'follow']]
     print(percentage)
-    return all_feedback
+    return_json = {'feedback':all_feedback, 'frames':frames_end}
+    return return_json
 
 
 def main():

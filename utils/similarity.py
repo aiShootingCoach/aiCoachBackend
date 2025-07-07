@@ -170,7 +170,6 @@ def compare_with_exemplary_data(user_data: dict) -> List[tuple]:
             if user_data['right_top_diffrence'] != ex_file['right_top_diffrence'] or user_data['left_top_diffrence'] != ex_file['left_top_diffrence']:
                 similarity_score = 10000
 
-
             similarity_results.append((file, similarity_score))
 
         except Exception as e:

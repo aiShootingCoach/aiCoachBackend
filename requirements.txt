@@ -4,3 +4,5 @@ numpy
 scipy
 fastapi[standard]
 python-multipart
+Celery
+starlette
