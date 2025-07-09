@@ -6,9 +6,11 @@ import json
 import subprocess
 import re
 from utils import scanner, feedback, similarity
+import mediapipe as mp
 
+FRAME_SKIP = 2
 TOP_CAP = 100000
-PERCENTAGE_BASE = 10000
+PERCENTAGE_BASE = 2500
 
 
 def save_feedback_to_json(data, filename):
@@ -21,28 +23,41 @@ def precantage_output(pose_data):
     gather = pose_data['gather'][1]
     loading = pose_data['loading'][1]
     release = pose_data['release'][1]
-    follow = format((PERCENTAGE_BASE - follow) / PERCENTAGE_BASE, '.2%')
-    gather = format((PERCENTAGE_BASE - gather) / PERCENTAGE_BASE, '.2%')
-    loading = format((PERCENTAGE_BASE - loading) / PERCENTAGE_BASE, '.2%')
-    release = format((PERCENTAGE_BASE - release) / PERCENTAGE_BASE, '.2%')
+    follow = round((PERCENTAGE_BASE - follow) / PERCENTAGE_BASE*100)
+    if follow < 0: follow = 0
+    gather = round((PERCENTAGE_BASE - gather) / PERCENTAGE_BASE*100)
+    if gather < 0: gather = 0
+    loading = round((PERCENTAGE_BASE - loading) / PERCENTAGE_BASE*100)
+    if loading < 0: loading = 0
+    release = round((PERCENTAGE_BASE - release) / PERCENTAGE_BASE*100)
+    if release < 0: release = 0
     out = {'follow': follow, 'gather': gather, 'loading': loading, 'release': release}
     return out
 
 
 def compare_two():
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
+
     path1 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130022_1.jpg'
     path2 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130025_1.jpg'
-    user_data1 = scanner.scan(path1)
-    user_data2 = scanner.scan(path2)
+    user_data1 = scanner.scan(path1, pose)
+    user_data2 = scanner.scan(path2, pose)
     print(user_data1)
     print(user_data2)
+    pose.close()
 
 
 def differences(path, stage):
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
+
     if not path or path == "":
         print(f"Error: Invalid file path for stage {stage}")
         return None
-    user_data = scanner.scan(path)
+    user_data = scanner.scan(path, pose)
     if user_data is None:
         print(f"Error: Failed to analyze frame for stage {stage}")
         return None
@@ -67,6 +82,7 @@ def differences(path, stage):
         "left_hip_angle": user_data["left_hip_angle"] - exemplar_data["left_hip_angle"],
         "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"],
     }
+    pose.close()
     return difference
 
 
@@ -128,6 +144,51 @@ def get_video_rotation(file_path):
         print(f"Error: Failed to run ffprobe on {file_path}")
         return 0
 
+def assign_frames_with_order(frame_scores, stages=["loading", "gather", "release", "follow"]):
+    # Create a dictionary to store scores for each stage
+    stage_frame_scores = {stage: [] for stage in stages}
+    for frame_path, scores in frame_scores:
+        frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+        for filename, score in scores:
+            stage = filename.split('.')[0]
+            if stage in stages:
+                stage_frame_scores[stage].append((frame_path, frame_num, score))
+
+    # Sort frames by frame number for each stage to ensure temporal consistency
+    for stage in stages:
+        stage_frame_scores[stage].sort(key=lambda x: x[1])  # Sort by frame number
+
+    # Find the best combination of frames that satisfies the temporal order
+    best_total_score = float('inf')
+    best_assignment = None
+
+    # Iterate through all possible combinations of frames for each stage
+    for loading_frame, loading_num, loading_score in stage_frame_scores['loading']:
+        for gather_frame, gather_num, gather_score in stage_frame_scores['gather']:
+            if gather_num <= loading_num:
+                continue  # Enforce loading < gather
+            for release_frame, release_num, release_score in stage_frame_scores['release']:
+                if release_num <= gather_num:
+                    continue  # Enforce gather < release
+                for follow_frame, follow_num, follow_score in stage_frame_scores['follow']:
+                    if follow_num <= release_num:
+                        continue  # Enforce release < follow
+                    # Calculate total score for this combination
+                    total_score = loading_score + gather_score + release_score + follow_score
+                    if total_score < best_total_score:
+                        best_total_score = total_score
+                        best_assignment = {
+                            'loading': [loading_frame, loading_score],
+                            'gather': [gather_frame, gather_score],
+                            'release': [release_frame, release_score],
+                            'follow': [follow_frame, follow_score]
+                        }
+
+    if best_assignment is None:
+        print("Error: No valid frame assignment found that satisfies temporal order")
+        return None
+
+    return best_assignment
 
 def scan_film(file_path, auto_rotate=True):
     current_dir = Path(__file__).resolve().parent.parent
@@ -156,10 +217,15 @@ def scan_film(file_path, auto_rotate=True):
     }
 
     frame_scores = []
+    # Initialize MediaPipe Pose and drawing utilities
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
+
     try:
         frame_number = 0
         max_frames = 1000
-        frame_skip = 2
+        frame_skip = FRAME_SKIP
         while frame_number < max_frames:
             ret, frame = cap.read()
             if not ret:
@@ -177,7 +243,7 @@ def scan_film(file_path, auto_rotate=True):
             frame_path = os.path.join(frames_dir, frame_filename)
             cv2.imwrite(frame_path, frame)
 
-            scan = scanner.scan(frame_path)
+            scan = scanner.scan(frame_path, pose)
             if scan is None:
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
@@ -193,46 +259,10 @@ def scan_film(file_path, auto_rotate=True):
 
     finally:
         cap.release()
+        pose.close()
 
-    # Pass 2: Assign frames to stages optimally
-    max_attempts = 10
-    attempt = 0
 
-    while attempt < max_attempts:
-        most_similars_file = {
-            "loading": ["", TOP_CAP],
-            "gather": ["", TOP_CAP],
-            "release": ["", TOP_CAP],
-            "follow": ["", TOP_CAP]
-        }
-        used_frames = set()
-        for stage in ["loading", "gather", "release", "follow"]:
-            best_score = TOP_CAP
-            best_frame = ""
-            for frame_path, scores in frame_scores:
-                if frame_path not in used_frames:
-                    for filename, score in scores:
-                        if filename == f"{stage}.json" and score < best_score:
-                            best_score = score
-                            best_frame = frame_path
-            if best_frame:
-                most_similars_file[stage] = [best_frame, best_score]
-                used_frames.add(best_frame)
-        if verify_frame_order(most_similars_file):
-            break
-        worst_score = max(score for _, score in most_similars_file.values())
-        worst_stage = next(stage for stage, (_, score) in most_similars_file.items()
-                           if score == worst_score)
-        used_frames.remove(most_similars_file[worst_stage][0])
-        attempt += 1
-
-    if attempt == max_attempts:
-        print("Error: Failed to find optimal frame assignment")
-
-    for frame_path, _ in frame_scores:
-        if frame_path not in used_frames and os.path.exists(frame_path):
-            os.remove(frame_path)
-            print(f"Removed frame: {os.path.basename(frame_path)}")
+    most_similars_file = assign_frames_with_order(frame_scores)
 
     all_feedback = []
     percentage = precantage_output(most_similars_file)
@@ -251,8 +281,10 @@ def scan_film(file_path, auto_rotate=True):
     print("\nMost similar System: frames:")
     print(most_similars_file)
     print("\n")
+    frames_end = [[most_similars_file['loading'][0],'loading'],[most_similars_file['gather'][0],'gather'],[most_similars_file['release'][0],'release'],[most_similars_file['follow'][0],'follow']]
     print(percentage)
-    return all_feedback
+    return_json = {'feedback':all_feedback, 'frames':frames_end}
+    return return_json
 
 
 def main():

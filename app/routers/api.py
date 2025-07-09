@@ -1,17 +1,23 @@
 import logging
 import shutil
 import uuid
+import base64
 from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
-
+from utils import api_additional
 from utils import film_scanner
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI
+
+app = FastAPI()
+
 
 router = APIRouter()
-
+FRAMES_DIR = Path(__file__).resolve().parent.parent.parent / "utils" / "frames"
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "data" / "user_shots"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-MAX_SIZE = 100 * 1024 * 1024  # 100MB
+MAX_SIZE = 2 * 1024 * 1024  # 100MB
 
 @router.get("/hello/", tags=["test"])
 def hello_world():
@@ -20,15 +26,9 @@ def hello_world():
 
 @router.post("/uploadfile/")
 async def upload_video(file: UploadFile = File(...)):
-    """
-    Uploads a video file to the server.
-
-    The file is saved in the `app/data/user_shots` directory with a unique
-    filename to prevent overwrites.
-    """
     # Check if the uploaded file is a video
     logging.log(logging.INFO, file.content_type)
-    if file.content_type != "video/mp4":
+    if file.content_type != "video/mp4" or file.size > MAX_SIZE:
         raise HTTPException(status_code=400, detail="Only MP4 files are allowed")
 
     # Generate a unique filename using UUID to avoid collisions
@@ -47,12 +47,16 @@ async def upload_video(file: UploadFile = File(...)):
         # Always close the file
         file.file.close()
 
-    return film_scanner.scan_film(str(destination_path) )
+    return_json = film_scanner.scan_film(str(destination_path))
 
-    # Return the details of the uploaded file
-    # return {
-    #     "detail": "Video uploaded successfully!",
-    #     "filename": unique_filename,
-    #     "content_type": file.content_type,
-    #     "saved_path": str(destination_path)  # Return path as a string
-    # }
+    frames  = api_additional.attach_frames(return_json)
+
+    response = {
+        "feedback": return_json['feedback'],
+        "frames": frames
+    }
+    api_additional.clean()
+
+    return response
+
+app.include_router(router)

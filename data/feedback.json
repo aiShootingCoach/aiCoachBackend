@@ -1,17 +1,49 @@
 [
     {
         "stage": "follow",
-        "result": "99.56%",
+        "result": 71,
         "feedback": {
+            "right_elbow_angle": [
+                "Excessive stiffness reduces fluidity.",
+                "Fully extend elbow but keep relaxed for smooth follow."
+            ],
+            "right_wrist_angle": [
+                "Over-snap may affect consistency.",
+                "Ensure smooth downward wrist snap."
+            ],
+            "right_shoulder_angle": [
+                "Weak follow limits arc.",
+                "Elevate shoulder for complete follow."
+            ],
             "right_hip_angle": [
                 "Backward lean disrupts balance.",
                 "Extend hips fully but stay balanced."
+            ],
+            "right_knee_angle": [
+                "Incomplete drive affects stability.",
+                "Fully extend knees for stable landing."
+            ],
+            "left_elbow_angle": [
+                "Premature withdrawal disrupts balance.",
+                "Maintain slight bend in guide elbow."
+            ],
+            "left_wrist_angle": [
+                "Premature withdrawal affects stability.",
+                "Maintain neutral guide wrist position."
+            ],
+            "left_hip_angle": [
+                "Asymmetry affects landing.",
+                "Extend hips fully with symmetry for stable landing."
+            ],
+            "left_knee_angle": [
+                "Uneven drive reduces stability.",
+                "Fully extend knees for balanced landing."
             ]
         }
     },
     {
         "stage": "gather",
-        "result": "98.25%",
+        "result": 49,
         "feedback": {
             "right_elbow_angle": [
                 "Premature extension disrupts shot timing.",
@@ -21,47 +53,51 @@
                 "Misaligns ball, disrupting release.",
                 "Maintain neutral wrist position."
             ],
+            "right_shoulder_angle": [
+                "Disrupts body alignment.",
+                "Keep shoulder lower for consistent setup."
+            ],
             "right_hip_angle": [
                 "Premature extension disrupts timing.",
                 "Maintain slight hip bend for balance."
             ],
-            "right_knee_angle": [
-                "Slows transition to release.",
-                "Extend knees slightly for smoother transition."
+            "left_elbow_angle": [
+                "Interferes with shot setup.",
+                "Extend guide elbow slightly for alignment."
             ],
-            "left_knee_angle": [
-                "Uneven posture affects balance.",
-                "Extend knees slightly for smoother transition."
+            "left_wrist_angle": [
+                "Interferes with setup.",
+                "Keep guide wrist neutral for alignment."
+            ],
+            "left_hip_angle": [
+                "Asymmetry disrupts balance.",
+                "Maintain slight hip bend for symmetry."
             ]
         }
     },
     {
         "stage": "loading",
-        "result": "93.65%",
+        "result": 16,
         "feedback": {
-            "right_elbow_angle": [
-                "Reduces power storage due to insufficient bend.",
-                "Bend the elbow more to store energy for the shot."
-            ],
             "right_wrist_angle": [
                 "Rigid wrist limits snap potential.",
                 "Maintain neutral wrist position."
-            ],
-            "right_shoulder_angle": [
-                "Limits ball positioning.",
-                "Elevate shoulder slightly for better setup."
             ],
             "right_hip_angle": [
                 "Shallow squat reduces jump power.",
                 "Bend hips more for increased power."
             ],
             "right_knee_angle": [
-                "Excessive bend slows movement.",
-                "Reduce knee bend slightly for better mobility."
+                "Shallow bend reduces power.",
+                "Bend knees more for explosive jump."
             ],
             "left_elbow_angle": [
-                "Interferes with shooting hand.",
-                "Extend guide elbow slightly for better control."
+                "Pushes ball off-center.",
+                "Keep guide elbow slightly bent to stabilize ball."
+            ],
+            "left_wrist_angle": [
+                "Pushes ball off-line.",
+                "Keep guide wrist neutral to avoid interference."
             ],
             "left_hip_angle": [
                 "Excessive bend unbalances stance.",
@@ -75,11 +111,19 @@
     },
     {
         "stage": "release",
-        "result": "99.37%",
+        "result": 90,
         "feedback": {
+            "right_elbow_angle": [
+                "Incomplete extension reduces power.",
+                "Extend elbow more at release for improved power."
+            ],
+            "right_wrist_angle": [
+                "Insufficient snap reduces spin.",
+                "Snap wrist more for added backspin."
+            ],
             "right_shoulder_angle": [
-                "Strains shoulder, reducing consistency.",
-                "Relax shoulder during release."
+                "Limits shot height.",
+                "Elevate shoulder for added power."
             ],
             "right_hip_angle": [
                 "Overextension may cause backward lean.",
@@ -89,9 +133,17 @@
                 "Incomplete drive limits elevation.",
                 "Fully extend knees for maximum shot power."
             ],
-            "left_wrist_angle": [
-                "Pushes ball off-line.",
-                "Keep guide wrist neutral to avoid interference."
+            "left_elbow_angle": [
+                "Interferes with release.",
+                "Extend guide elbow slightly for stability."
+            ],
+            "left_hip_angle": [
+                "Asymmetry causes imbalance.",
+                "Fully extend hips symmetrically for stability."
+            ],
+            "left_knee_angle": [
+                "Uneven drive affects stability.",
+                "Fully extend knees for maximum power."
             ]
         }
     }
