@@ -5,7 +5,7 @@ import base64
 from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
-
+from utils import api_additional
 from utils import film_scanner
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
@@ -49,39 +49,13 @@ async def upload_video(file: UploadFile = File(...)):
 
     return_json = film_scanner.scan_film(str(destination_path))
 
-    frames = []
-    for frame_path in return_json['frames']:
-        try:
-            with open(frame_path[0], 'rb') as file:
-                img_data = file.read()
-                img_base64 = base64.b64encode(img_data).decode('utf-8')
-                add = [img_base64, frame_path[1]]
-                frames.append(add)
-        except Exception as e:
-            logging.error(f"Error reading frame {frame_path}: {e}")
-            add = ['null', frame_path[1]]
-            frames.append(add)
-            continue
+    frames  = api_additional.attach_frames(return_json)
 
     response = {
         "feedback": return_json['feedback'],
         "frames": frames
     }
-
-    for file_path in FRAMES_DIR.glob("*.jpg"):
-        try:
-            file_path.unlink()
-            logging.info(f"Deleted frame: {file_path}")
-        except Exception as e:
-            logging.error(f"Error deleting frame {file_path}: {e}")
-
-        # Remove all files in the user_shots directory
-    for file_path in UPLOAD_DIR.glob("*.mp4"):
-        try:
-            file_path.unlink()
-            logging.info(f"Deleted video: {file_path}")
-        except Exception as e:
-            logging.error(f"Error deleting video {file_path}: {e}")
+    api_additional.clean()
 
     return response
 
