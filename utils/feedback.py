@@ -1,3 +1,5 @@
+BIG_DIFFRENCE = 120
+SMALL_DIFFRENCE = 100
 weights = {
     "loading": {
         "Right": {
@@ -96,13 +98,13 @@ def analyze_shot_form(angle_differences, stage=None):
         try:
             issue = ""
             condition = None
-            if score > 40:
+            if score > BIG_DIFFRENCE:
                 condition = "big more"
-            elif score > 20:
+            elif score > SMALL_DIFFRENCE:
                 condition = "more"
-            elif score < -40:
+            elif score < -1*BIG_DIFFRENCE:
                 condition = "big less"
-            elif score < -20:
+            elif score < -1*SMALL_DIFFRENCE:
                 condition = "less"
             if condition:
                 issue = get_angle_feedback(angle_name, stage, condition)
