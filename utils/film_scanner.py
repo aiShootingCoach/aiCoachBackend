@@ -136,7 +136,7 @@ def get_video_rotation(file_path):
             capture_output=True, text=True
         )
         output = result.stdout
-        match = re.search(r'rotation=([-]?\d+)', output)
+        match = re.search(r'rotation=(-?\d+)', output)
         if match:
             return int(match.group(1))
         return 0  # No rotation metadata found
@@ -234,7 +234,7 @@ def scan_film(file_path, auto_rotate=True):
             # Apply rotation to counteract metadata-driven rotation
             if rotation in rotation_map:
                 frame = cv2.rotate(frame, rotation_map[rotation])
-                print(f"klatka: {frame_number} (rotated {rotation} degrees)")
+                print(f"klatka: {frame_number} (rotated {rotation} degrees), rotacja: {rotation_map[rotation]}")
 
             print(f"klatka: {frame_number}")
             frames_dir = Path(__file__).parent / "frames"
