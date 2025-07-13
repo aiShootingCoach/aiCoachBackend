@@ -2,9 +2,9 @@ import logging
 import uvicorn
 from fastapi import FastAPI
 
-app = FastAPI()
+from routers import api
 
-from app.routers import api
+app = FastAPI()
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,9 +15,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-if __name__ == "__main__":
-    uvicorn.run("your_app:app", host="0.0.0.0", port=8000)
 
 app.include_router(api.router)
 

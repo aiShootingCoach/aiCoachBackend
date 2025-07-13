@@ -1,7 +1,7 @@
 Run FastApi backend:
 
 ```bash
- fastapi dev app/main.py
+ fastapi dev main.py
  ```
 
 API: http://127.0.0.1:8000 \
