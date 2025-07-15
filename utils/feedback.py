@@ -1,3 +1,8 @@
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 BIG_DIFFRENCE = 120
 SMALL_DIFFRENCE = 100
 weights = {
@@ -564,9 +569,9 @@ if __name__ == "__main__":
         "left_knee_angle": -56.02   # Triggers "big less"
     }
     analysis = analyze_shot_form(example_differences, stage="release")
-    print("# Basketball Shot Form Analysis\n")
+    logger.info("# Basketball Shot Form Analysis\n")
     for angle, data in analysis.items():
         condition, (issue, correction) = data["condition"], data["feedback"]
-        print(f"**{angle.replace('_', ' ').title()}** ({condition})")
-        print(f"- Issue: {issue}")
-        print(f"- Correction: {correction}\n")
+        logger.info(f"**{angle.replace('_', ' ').title()}** ({condition})")
+        logger.info(f"- Issue: {issue}")
+        logger.info(f"- Correction: {correction}\n")

@@ -6,6 +6,9 @@ import math
 import os
 
 from utils import similarity
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_angle(first_point, mid_point, last_point):
@@ -95,19 +98,19 @@ def to_json(landmarks):
 def scan(image_path, pose):
     # Process an image to extract joint angles using MediaPipe Pose
     if not os.path.exists(image_path):
-        print(f"Error: File does not exist: {image_path}")
+        logger.error(f"Error: File does not exist: {image_path}")
         return None
 
     # Read and convert the image to RGB
     image = cv2.imread(image_path)
     if image is None:
-        print(f"Error: Unable to read image: {image_path}")
+        logger.error(f"Error: Unable to read image: {image_path}")
         return None
 
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     results = pose.process(image_rgb)
     if not results.pose_landmarks:
-        print(f"Error: No landmarks detected in image: {image_path}")
+        logger.error(f"Error: No landmarks detected in image: {image_path}")
         return None
 
     # Convert landmarks to joint angles
@@ -120,8 +123,8 @@ def main():
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
     mp_drawing = mp.solutions.drawing_utils
-    print(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/zr.png", pose)))
-    print(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/frame_0020.jpg", pose)))
+    logger.info(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/zr.png", pose)))
+    logger.info(similarity.compare_with_exemplary_data(scan("/home/kacper/zajecia_inf/PythonProject/frames/frame_0020.jpg", pose)))
     pose.close()
 if __name__ == "__main__":
     main()

@@ -7,6 +7,10 @@ import subprocess
 import re
 from utils import scanner, feedback, similarity
 import mediapipe as mp
+import logging
+
+logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
 
 FRAME_SKIP = 2
 TOP_CAP = 100000
@@ -44,8 +48,8 @@ def compare_two():
     path2 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130025_1.jpg'
     user_data1 = scanner.scan(path1, pose)
     user_data2 = scanner.scan(path2, pose)
-    print(user_data1)
-    print(user_data2)
+    logger.info(user_data1)
+    logger.info(user_data2)
     pose.close()
 
 
@@ -55,21 +59,21 @@ def differences(path, stage):
     mp_drawing = mp.solutions.drawing_utils
 
     if not path or path == "":
-        print(f"Error: Invalid file path for stage {stage}")
+        logger.error(f"Error: Invalid file path for stage {stage}")
         return None
     user_data = scanner.scan(path, pose)
     if user_data is None:
-        print(f"Error: Failed to analyze frame for stage {stage}")
+        logger.error(f"Error: Failed to analyze frame for stage {stage}")
         return None
     exemplary_data_path = Path(__file__).parent / f"../data/exemplary_data/{stage}.json"
     if not os.path.exists(exemplary_data_path):
-        print(f"Error: Exemplary data file for stage {stage} not found")
+        logger.error(f"Error: Exemplary data file for stage {stage} not found")
         return None
     try:
         with open(exemplary_data_path, 'r') as f:
             exemplar_data = json.load(f)
     except json.JSONDecodeError:
-        print(f"Error: Invalid format of exemplary data file for stage {stage}")
+        logger.error(f"Error: Invalid format of exemplary data file for stage {stage}")
         return None
     difference = {
         "right_elbow_angle": user_data["right_elbow_angle"] - exemplar_data["right_elbow_angle"],
@@ -141,7 +145,7 @@ def get_video_rotation(file_path):
             return int(match.group(1))
         return 0  # No rotation metadata found
     except subprocess.CalledProcessError:
-        print(f"Error: Failed to run ffprobe on {file_path}")
+        logger.error(f"Error: Failed to run ffprobe on {file_path}")
         return 0
 
 def assign_frames_with_order(frame_scores, stages=["loading", "gather", "release", "follow"]):
@@ -185,7 +189,7 @@ def assign_frames_with_order(frame_scores, stages=["loading", "gather", "release
                         }
 
     if best_assignment is None:
-        print("Error: No valid frame assignment found that satisfies temporal order")
+        logger.error("Error: No valid frame assignment found that satisfies temporal order")
         return None
 
     return best_assignment
@@ -197,12 +201,12 @@ def scan_film(file_path, auto_rotate=True):
 
     newest_file = file_path
     if newest_file is None:
-        print("Błąd: Brak plików wideo w katalogu")
+        logger.error("Error: no files in dri")
         return
 
     cap = cv2.VideoCapture(newest_file)
     if not cap.isOpened():
-        print("Błąd: Nie można otworzyć pliku wideo")
+        logger.error("Error: Can't play video")
         return
 
     # Get video rotation from metadata
@@ -234,9 +238,9 @@ def scan_film(file_path, auto_rotate=True):
             # Apply rotation to counteract metadata-driven rotation
             if rotation in rotation_map:
                 frame = cv2.rotate(frame, rotation_map[rotation])
-                print(f"klatka: {frame_number} (rotated {rotation} degrees), rotacja: {rotation_map[rotation]}")
+                logger.info(f"klatka: {frame_number} (rotated {rotation} degrees), rotacja: {rotation_map[rotation]}")
 
-            print(f"klatka: {frame_number}")
+            logger.info(f"klatka: {frame_number}")
             frames_dir = Path(__file__).parent / "frames"
             os.makedirs(frames_dir, exist_ok=True)
             frame_filename = f"frame_{frame_number:04d}.jpg"
@@ -247,12 +251,12 @@ def scan_film(file_path, auto_rotate=True):
             if scan is None:
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
-                print(f"Pominięto klatkę {frame_number} - błąd skanowania")
+                logger.info(f"Pominięto klatkę {frame_number} - błąd skanowania")
                 frame_number += frame_skip
                 continue
 
             similarity_scores = similarity.compare_with_exemplary_data(scan)
-            print(similarity_scores)
+            logger.info(similarity_scores)
             frame_scores.append((frame_path, similarity_scores))
             frame_number += frame_skip
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
@@ -278,11 +282,11 @@ def scan_film(file_path, auto_rotate=True):
 
     with open(feedback_file, 'w') as plik:
         json.dump(all_feedback, plik, indent=4)
-    print("\nMost similar System: frames:")
-    print(most_similars_file)
-    print("\n")
+    logger.info("\nMost similar System: frames:")
+    logger.info(most_similars_file)
+    logger.info("\n")
     frames_end = [[most_similars_file['loading'][0],'loading'],[most_similars_file['gather'][0],'gather'],[most_similars_file['release'][0],'release'],[most_similars_file['follow'][0],'follow']]
-    print(percentage)
+    logger.info(percentage)
     return_json = {'feedback':all_feedback, 'frames':frames_end}
     return return_json
 

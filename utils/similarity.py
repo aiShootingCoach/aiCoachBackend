@@ -4,6 +4,9 @@ from pathlib import Path
 import numpy as np
 import os
 from typing import Dict, List, Union
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Define weights for each joint angle across shooting stages
 weights = {
@@ -79,12 +82,12 @@ def read_json_file(file_path: str) -> dict:
         return json.load(file)
 
 def print_json_structure():
-    # Print the structure (keys) of all JSON files in the exemplary data directory
+    # logger.info the structure (keys) of all JSON files in the exemplary data directory
     ex_path =Path(__file__).parent / f"../data/exemplary_data/"
     for file in os.listdir(ex_path):
         if file.endswith('.json'):
             data = read_json_file(os.path.join(ex_path, file))
-            print("Available fields:", list(data.keys()))
+            logger.info("Available fields:", list(data.keys()))
 
 def get_weight(angle_name, stage_name) -> float:
     # Retrieve the weight for a specific angle and stage
@@ -129,12 +132,12 @@ def compare_with_exemplary_data(user_data: dict) -> List[tuple]:
     files = os.listdir(ex_path)
     similarity_results = []
 
-    # Print System: Print structure of the first exemplary data file
+    # logger.info System: logger.info structure of the first exemplary data file
 
 
     if files:
         first_file = read_json_file(os.path.join(ex_path, files[0]))
-        print("Structure of first file:", list(first_file.keys()))
+        logger.info("Structure of first file: %s", list(first_file.keys()))
 
     # Process each exemplary data file
     for file in reversed(files):
@@ -154,7 +157,7 @@ def compare_with_exemplary_data(user_data: dict) -> List[tuple]:
                     user_angles.append(user_data[key])
 
             if not common_angles:
-                print(f"No common angles in file {file}")
+                logger.info(f"No common angles in file {file}")
                 continue
 
             # Calculate weighted similarity score (weighted mean squared error)
@@ -173,7 +176,7 @@ def compare_with_exemplary_data(user_data: dict) -> List[tuple]:
             similarity_results.append((file, similarity_score))
 
         except Exception as e:
-            print(f"Error processing file {file}: {str(e)}")
+            logger.info(f"Error processing file {file}: {str(e)}")
             continue
 
     return similarity_results
@@ -195,15 +198,15 @@ def main():
     try:
         scores = compare_with_exemplary_data(test_data)
         if scores:
-            print("\nSimilarity results (lower score = better match):")
-            print("-" * 50)
+            logger.info("\nSimilarity results (lower score = better match):")
+            logger.info("-" * 50)
             for filename, score in scores:
-                print(f"{filename}: {score:.2f}")
+                logger.info(f"{filename}: {score:.2f}")
         else:
-            print("No comparison results found")
+            logger.info("No comparison results found")
 
     except Exception as e:
-        print(f"Error during test: {str(e)}")
+        logger.error(f"Error during test: {str(e)}")
 
 if __name__ == '__main__':
     main()

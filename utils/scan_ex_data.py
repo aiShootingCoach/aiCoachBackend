@@ -7,6 +7,9 @@ import json
 
 import mediapipe as mp
 
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def scan_ex_data(path):
