@@ -1,14 +1,8 @@
-FROM python:3.12
-
-WORKDIR /code
+FROM tiangolo/uvicorn-gunicorn-fastapi:python3.11
 
 USER root
-RUN apt-get update && apt-get install -y libgl1
+RUN apt-get update && apt-get install -y libgl1 ffmpeg
 
-COPY ./requirements.txt /code/requirements.txt
+COPY . /app
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-
-COPY . /code/app
-
-CMD ["fastapi", "run", "app/main.py", "--port", "80", "--workers", "4"]
+RUN pip install --progress-bar off -r /app/requirements.txt
