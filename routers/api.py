@@ -17,7 +17,7 @@ router = APIRouter()
 FRAMES_DIR = Path(__file__).resolve().parent.parent.parent / "utils" / "frames"
 UPLOAD_DIR = Path(__file__).resolve().parent.parent / "data" / "user_shots"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-MAX_SIZE = 2 * 1024 * 1024  # 100MB
+MAX_SIZE = 20 * 1024 * 1024  # 100MB
 
 @router.get("/hello/", tags=["test"])
 def hello_world():

@@ -1,13 +1,27 @@
 [
     {
         "stage": "follow",
-        "result": 96,
+        "result": 97,
         "feedback": {
             "right_elbow_angle": {
+                "condition": "big more",
+                "feedback": [
+                    "Severely stiff elbow reduces follow-through fluidity, affecting consistency.",
+                    "Fully extend but relax elbow for smooth, consistent follow-through."
+                ]
+            },
+            "right_wrist_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely over-snapped wrist disrupts shot consistency.",
+                    "Moderate wrist snap for consistent follow-through."
+                ]
+            },
+            "right_shoulder_angle": {
                 "condition": "more",
                 "feedback": [
-                    "Stiff elbow shortens follow-through, reducing consistency.",
-                    "Extend and relax elbow for smooth follow-through."
+                    "Tense shoulder reduces follow-through smoothness.",
+                    "Keep shoulder relaxed for smooth follow-through."
                 ]
             },
             "right_hip_angle": {
@@ -21,7 +35,7 @@
     },
     {
         "stage": "gather",
-        "result": 79,
+        "result": 82,
         "feedback": {
             "right_elbow_angle": {
                 "condition": "big more",
@@ -51,13 +65,6 @@
                     "Maintain significant hip bend for balanced transition."
                 ]
             },
-            "left_elbow_angle": {
-                "condition": "big more",
-                "feedback": [
-                    "Severely flared guide elbow disrupts alignment, causing major accuracy loss.",
-                    "Keep guide elbow tightly tucked for proper setup."
-                ]
-            },
             "left_knee_angle": {
                 "condition": "big less",
                 "feedback": [
@@ -69,20 +76,13 @@
     },
     {
         "stage": "loading",
-        "result": 81,
+        "result": 79,
         "feedback": {
             "right_elbow_angle": {
                 "condition": "big more",
                 "feedback": [
                     "Severely extended elbow leads to ball loaded too low, slowing release.",
                     "Significantly bend elbow to keep ball at chest level for fluid motion."
-                ]
-            },
-            "right_wrist_angle": {
-                "condition": "big more",
-                "feedback": [
-                    "Severely rigid wrist misaligns ball, disrupting setup.",
-                    "Maintain neutral wrist position to align ball properly."
                 ]
             },
             "right_knee_angle": {
@@ -93,10 +93,10 @@
                 ]
             },
             "left_hip_angle": {
-                "condition": "big less",
+                "condition": "less",
                 "feedback": [
-                    "Severely excessive guide hip bend causes major imbalance.",
-                    "Reduce guide hip bend significantly for better balance."
+                    "Excessive guide hip bend unbalances stance.",
+                    "Reduce guide hip bend slightly for better balance."
                 ]
             },
             "left_knee_angle": {
@@ -110,7 +110,7 @@
     },
     {
         "stage": "release",
-        "result": 99,
+        "result": 98,
         "feedback": {}
     }
 ]
