@@ -9,7 +9,7 @@ from utils import scanner, feedback, similarity
 import mediapipe as mp
 import logging
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 FRAME_SKIP = 2
@@ -39,29 +39,14 @@ def precantage_output(pose_data):
     return out
 
 
-def compare_two():
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose()
-    mp_drawing = mp.solutions.drawing_utils
-
-    path1 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130022_1.jpg'
-    path2 = '/home/kacper/zajecia_inf/PythonProject/frames/20250626130025_1.jpg'
-    user_data1 = scanner.scan(path1, pose)
-    user_data2 = scanner.scan(path2, pose)
-    logger.info(user_data1)
-    logger.info(user_data2)
-    pose.close()
 
 
-def differences(path, stage):
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose()
-    mp_drawing = mp.solutions.drawing_utils
+def differences(path, stage, scanner_object):
 
     if not path or path == "":
         logger.error(f"Error: Invalid file path for stage {stage}")
         return None
-    user_data = scanner.scan(path, pose)
+    user_data = scanner_object.scan(path)
     if user_data is None:
         logger.error(f"Error: Failed to analyze frame for stage {stage}")
         return None
@@ -86,7 +71,6 @@ def differences(path, stage):
         "left_hip_angle": user_data["left_hip_angle"] - exemplar_data["left_hip_angle"],
         "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"],
     }
-    pose.close()
     return difference
 
 
@@ -224,7 +208,8 @@ def scan_film(file_path, auto_rotate=True):
     # Initialize MediaPipe Pose and drawing utilities
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
-    mp_drawing = mp.solutions.drawing_utils
+
+    scanner_object = scanner.Scanner(pose)
 
     try:
         frame_number = 0
@@ -247,7 +232,8 @@ def scan_film(file_path, auto_rotate=True):
             frame_path = os.path.join(frames_dir, frame_filename)
             cv2.imwrite(frame_path, frame)
 
-            scan = scanner.scan(frame_path, pose)
+            scan = scanner_object.scan(frame_path)
+            # scan = scanner.scan(frame_path, pose)
             if scan is None:
                 if os.path.exists(frame_path):
                     os.remove(frame_path)
@@ -263,7 +249,6 @@ def scan_film(file_path, auto_rotate=True):
 
     finally:
         cap.release()
-        pose.close()
 
 
     most_similars_file = assign_frames_with_order(frame_scores)
@@ -272,11 +257,11 @@ def scan_film(file_path, auto_rotate=True):
     percentage = precantage_output(most_similars_file)
     tab_names = ["follow", "gather", "loading", "release"]
     for stage in tab_names:
-        feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage), stage)
+        feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner_object), stage)
         stage_feedback = {
             'stage': stage,
             'result': percentage[stage],
-            'feedback': feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage), stage)
+            'feedback': feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner_object), stage)
         }
         all_feedback.append(stage_feedback)
 
@@ -288,6 +273,7 @@ def scan_film(file_path, auto_rotate=True):
     frames_end = [[most_similars_file['loading'][0],'loading'],[most_similars_file['gather'][0],'gather'],[most_similars_file['release'][0],'release'],[most_similars_file['follow'][0],'follow']]
     logger.info(percentage)
     return_json = {'feedback':all_feedback, 'frames':frames_end}
+    pose.close()
     return return_json
 
 

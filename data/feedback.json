@@ -1,15 +1,8 @@
 [
     {
         "stage": "follow",
-        "result": 97,
+        "result": 95,
         "feedback": {
-            "right_elbow_angle": {
-                "condition": "big more",
-                "feedback": [
-                    "Severely stiff elbow reduces follow-through fluidity, affecting consistency.",
-                    "Fully extend but relax elbow for smooth, consistent follow-through."
-                ]
-            },
             "right_wrist_angle": {
                 "condition": "big less",
                 "feedback": [
@@ -17,25 +10,18 @@
                     "Moderate wrist snap for consistent follow-through."
                 ]
             },
-            "right_shoulder_angle": {
-                "condition": "more",
-                "feedback": [
-                    "Tense shoulder reduces follow-through smoothness.",
-                    "Keep shoulder relaxed for smooth follow-through."
-                ]
-            },
             "right_hip_angle": {
-                "condition": "more",
+                "condition": "big more",
                 "feedback": [
-                    "Overextended hips affect landing balance.",
-                    "Extend hips fully but stay balanced."
+                    "Severely overextended hips cause major balance loss on landing.",
+                    "Extend hips fully but maintain significant balance for stable landing."
                 ]
             }
         }
     },
     {
         "stage": "gather",
-        "result": 82,
+        "result": 86,
         "feedback": {
             "right_elbow_angle": {
                 "condition": "big more",
@@ -51,18 +37,18 @@
                     "Reduce wrist flexion significantly for stable grip."
                 ]
             },
-            "right_shoulder_angle": {
-                "condition": "big more",
-                "feedback": [
-                    "Severely raised shoulder disrupts body alignment, causing major accuracy loss.",
-                    "Lower shoulder significantly for consistent setup."
-                ]
-            },
             "right_hip_angle": {
                 "condition": "big more",
                 "feedback": [
                     "Severely premature hip extension disrupts timing, causing imbalance.",
                     "Maintain significant hip bend for balanced transition."
+                ]
+            },
+            "left_wrist_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely flexed guide wrist causes fumbling, disrupting shot.",
+                    "Keep guide wrist neutral for stable grip."
                 ]
             },
             "left_knee_angle": {
@@ -76,13 +62,34 @@
     },
     {
         "stage": "loading",
-        "result": 79,
+        "result": 70,
         "feedback": {
             "right_elbow_angle": {
+                "condition": "more",
+                "feedback": [
+                    "Extended elbow causes ball to load too low, slowing release.",
+                    "Bend elbow to position ball at chest for smoother shot setup."
+                ]
+            },
+            "right_wrist_angle": {
                 "condition": "big more",
                 "feedback": [
-                    "Severely extended elbow leads to ball loaded too low, slowing release.",
-                    "Significantly bend elbow to keep ball at chest level for fluid motion."
+                    "Severely rigid wrist misaligns ball, disrupting setup.",
+                    "Maintain neutral wrist position to align ball properly."
+                ]
+            },
+            "right_shoulder_angle": {
+                "condition": "more",
+                "feedback": [
+                    "Raised shoulder causes ball to load too low, affecting fluidity.",
+                    "Lower shoulder to keep ball at chest level."
+                ]
+            },
+            "right_hip_angle": {
+                "condition": "big more",
+                "feedback": [
+                    "Severely straight hips create unstable base, drastically reducing power.",
+                    "Bend hips significantly for a balanced, athletic stance."
                 ]
             },
             "right_knee_angle": {
@@ -90,13 +97,6 @@
                 "feedback": [
                     "Severely excessive knee bend causes major instability, slowing shot.",
                     "Reduce knee bend significantly for better mobility and balance."
-                ]
-            },
-            "left_hip_angle": {
-                "condition": "less",
-                "feedback": [
-                    "Excessive guide hip bend unbalances stance.",
-                    "Reduce guide hip bend slightly for better balance."
                 ]
             },
             "left_knee_angle": {
@@ -111,6 +111,35 @@
     {
         "stage": "release",
         "result": 98,
-        "feedback": {}
+        "feedback": {
+            "right_wrist_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely excessive snap causes erratic release, reducing accuracy.",
+                    "Moderate wrist snap significantly for controlled release."
+                ]
+            },
+            "right_shoulder_angle": {
+                "condition": "more",
+                "feedback": [
+                    "Raised shoulder lowers release point, straining shot.",
+                    "Relax shoulder for higher release point."
+                ]
+            },
+            "right_knee_angle": {
+                "condition": "less",
+                "feedback": [
+                    "Incomplete knee drive reduces elevation.",
+                    "Fully extend knees for maximum shot power."
+                ]
+            },
+            "left_elbow_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely bent guide elbow interferes with release, causing side spin.",
+                    "Extend guide elbow slightly for clean release."
+                ]
+            }
+        }
     }
 ]
