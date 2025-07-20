@@ -64,13 +64,13 @@ class Scanner:
         left_knee_angle = self.calculate_angle(left_hip, left_knee, left_ankle)
 
         if (right_wrist.y - right_shoulder.y) > 0:
-            right_top_diffrence = 1
+            right_top_difference = 1
         else:
-            right_top_diffrence = 0
+            right_top_difference = 0
         if left_wrist.y - left_shoulder.y > 0:
-            left_top_diffrence = 1
+            left_top_difference = 1
         else:
-            left_top_diffrence = 0
+            left_top_difference = 0
         # Store angles in a dictionary
         pose_data = {
             "right_elbow_angle": right_elbow_angle,
@@ -82,8 +82,8 @@ class Scanner:
             "left_wrist_angle": left_wrist_angle,
             "left_hip_angle": left_hip_angle,
             "left_knee_angle": left_knee_angle,
-            "right_top_diffrence": right_top_diffrence,
-            "left_top_diffrence": left_top_diffrence,
+            "right_top_difference": right_top_difference,
+            "left_top_difference": left_top_difference,
         }
 
         return pose_data
@@ -128,13 +128,3 @@ class Scanner:
     #     pose_data = self.to_json(results.pose_landmarks.landmark)
     #     # visualization(pose_data, image, mp_pose, mp_drawing, results)
     #     return pose_data
-
-def main():
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose()
-    mp_drawing = mp.solutions.drawing_utils
-    lets_scan = Scanner(pose)
-    logger.error(lets_scan.scan("/home/kacper/zajecia_inf/PythonProject/frames/zr.png"))
-
-if __name__ == "__main__":
-    main()

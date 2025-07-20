@@ -1,7 +1,7 @@
 [
     {
         "stage": "follow",
-        "result": 95,
+        "result": 55,
         "feedback": {
             "right_wrist_angle": {
                 "condition": "big less",
@@ -10,18 +10,46 @@
                     "Moderate wrist snap for consistent follow-through."
                 ]
             },
-            "right_hip_angle": {
-                "condition": "big more",
+            "right_shoulder_angle": {
+                "condition": "big less",
                 "feedback": [
-                    "Severely overextended hips cause major balance loss on landing.",
-                    "Extend hips fully but maintain significant balance for stable landing."
+                    "Severely low shoulder weakens follow-through, reducing arc.",
+                    "Elevate shoulder significantly for complete follow-through."
+                ]
+            },
+            "right_knee_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely incomplete knee extension causes unstable landing.",
+                    "Fully extend knees for stable, balanced landing."
+                ]
+            },
+            "left_elbow_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely bent guide elbow disrupts follow-through balance.",
+                    "Maintain slight bend in guide elbow for smooth follow-through."
+                ]
+            },
+            "left_wrist_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely flexed guide wrist disrupts follow-through balance.",
+                    "Maintain neutral guide wrist for consistent follow-through."
+                ]
+            },
+            "left_knee_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely incomplete guide knee extension causes unstable landing.",
+                    "Fully extend guide knee for balanced landing."
                 ]
             }
         }
     },
     {
         "stage": "gather",
-        "result": 86,
+        "result": 50,
         "feedback": {
             "right_elbow_angle": {
                 "condition": "big more",
@@ -44,6 +72,20 @@
                     "Maintain significant hip bend for balanced transition."
                 ]
             },
+            "right_knee_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely delayed knee extension slows transition, rushing shot.",
+                    "Extend knees significantly for smoother transition."
+                ]
+            },
+            "left_elbow_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely bent guide elbow delays shot setup, rushing release.",
+                    "Extend guide elbow significantly for alignment."
+                ]
+            },
             "left_wrist_angle": {
                 "condition": "big less",
                 "feedback": [
@@ -51,38 +93,24 @@
                     "Keep guide wrist neutral for stable grip."
                 ]
             },
-            "left_knee_angle": {
-                "condition": "big less",
+            "left_hip_angle": {
+                "condition": "big more",
                 "feedback": [
-                    "Severely delayed guide knee extension slows transition, rushing shot.",
-                    "Extend guide knee significantly for smoother transition."
+                    "Severely premature guide hip extension disrupts balance, affecting rhythm.",
+                    "Maintain significant guide hip bend for symmetry."
                 ]
             }
         }
     },
     {
         "stage": "loading",
-        "result": 70,
+        "result": 21,
         "feedback": {
-            "right_elbow_angle": {
-                "condition": "more",
-                "feedback": [
-                    "Extended elbow causes ball to load too low, slowing release.",
-                    "Bend elbow to position ball at chest for smoother shot setup."
-                ]
-            },
             "right_wrist_angle": {
                 "condition": "big more",
                 "feedback": [
                     "Severely rigid wrist misaligns ball, disrupting setup.",
                     "Maintain neutral wrist position to align ball properly."
-                ]
-            },
-            "right_shoulder_angle": {
-                "condition": "more",
-                "feedback": [
-                    "Raised shoulder causes ball to load too low, affecting fluidity.",
-                    "Lower shoulder to keep ball at chest level."
                 ]
             },
             "right_hip_angle": {
@@ -93,25 +121,39 @@
                 ]
             },
             "right_knee_angle": {
-                "condition": "big less",
+                "condition": "big more",
                 "feedback": [
-                    "Severely excessive knee bend causes major instability, slowing shot.",
-                    "Reduce knee bend significantly for better mobility and balance."
+                    "Severely straight knees create unstable base, drastically reducing power.",
+                    "Bend knees significantly for explosive jump and stability."
                 ]
             },
-            "left_knee_angle": {
+            "left_elbow_angle": {
+                "condition": "big more",
+                "feedback": [
+                    "Severely extended guide elbow pushes ball off-center, disrupting setup.",
+                    "Bend guide elbow significantly to stabilize ball."
+                ]
+            },
+            "left_hip_angle": {
                 "condition": "big less",
                 "feedback": [
-                    "Severely excessive guide knee bend causes major imbalance.",
-                    "Reduce guide knee bend significantly for better balance."
+                    "Severely excessive guide hip bend causes major imbalance.",
+                    "Reduce guide hip bend significantly for better balance."
                 ]
             }
         }
     },
     {
         "stage": "release",
-        "result": 98,
+        "result": 91,
         "feedback": {
+            "right_elbow_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely incomplete extension results in low release, drastically reducing power.",
+                    "Fully extend elbow at release for maximum power and height."
+                ]
+            },
             "right_wrist_angle": {
                 "condition": "big less",
                 "feedback": [
@@ -120,24 +162,24 @@
                 ]
             },
             "right_shoulder_angle": {
-                "condition": "more",
+                "condition": "big less",
                 "feedback": [
-                    "Raised shoulder lowers release point, straining shot.",
-                    "Relax shoulder for higher release point."
+                    "Severely low shoulder drastically limits shot height and power.",
+                    "Elevate shoulder significantly for added power and height."
                 ]
             },
             "right_knee_angle": {
-                "condition": "less",
+                "condition": "big less",
                 "feedback": [
-                    "Incomplete knee drive reduces elevation.",
+                    "Severely incomplete knee extension drastically limits shot elevation.",
                     "Fully extend knees for maximum shot power."
                 ]
             },
-            "left_elbow_angle": {
+            "left_knee_angle": {
                 "condition": "big less",
                 "feedback": [
-                    "Severely bent guide elbow interferes with release, causing side spin.",
-                    "Extend guide elbow slightly for clean release."
+                    "Severely incomplete guide knee extension reduces stability drastically.",
+                    "Fully extend guide knee for maximum power and stability."
                 ]
             }
         }

@@ -5,7 +5,8 @@ import cv2
 import json
 import subprocess
 import re
-from utils import scanner, feedback, similarity
+from utils.scanner import Scanner
+from utils import feedback, similarity
 import mediapipe as mp
 import logging
 
@@ -41,12 +42,12 @@ def precantage_output(pose_data):
 
 
 
-def differences(path, stage, scanner_object):
+def differences(path, stage, scanner: Scanner):
 
     if not path or path == "":
         logger.error(f"Error: Invalid file path for stage {stage}")
         return None
-    user_data = scanner_object.scan(path)
+    user_data = scanner.scan(path)
     if user_data is None:
         logger.error(f"Error: Failed to analyze frame for stage {stage}")
         return None
@@ -209,7 +210,7 @@ def scan_film(file_path, auto_rotate=True):
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
 
-    scanner_object = scanner.Scanner(pose)
+    scanner = Scanner(pose)
 
     try:
         frame_number = 0
@@ -232,7 +233,7 @@ def scan_film(file_path, auto_rotate=True):
             frame_path = os.path.join(frames_dir, frame_filename)
             cv2.imwrite(frame_path, frame)
 
-            scan = scanner_object.scan(frame_path)
+            scan = scanner.scan(frame_path)
             # scan = scanner.scan(frame_path, pose)
             if scan is None:
                 if os.path.exists(frame_path):
@@ -257,11 +258,11 @@ def scan_film(file_path, auto_rotate=True):
     percentage = precantage_output(most_similars_file)
     tab_names = ["follow", "gather", "loading", "release"]
     for stage in tab_names:
-        feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner_object), stage)
+        feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner), stage)
         stage_feedback = {
             'stage': stage,
             'result': percentage[stage],
-            'feedback': feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner_object), stage)
+            'feedback': feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner), stage)
         }
         all_feedback.append(stage_feedback)
 
