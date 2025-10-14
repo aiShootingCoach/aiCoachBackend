@@ -19,7 +19,7 @@ TOP_CAP = 100000
 PERCENTAGE_BASE = 2500
 
 
-class  FilmScanner:
+class FilmScanner:
 
     @staticmethod
     def save_feedback_to_json(data, filename):
@@ -44,12 +44,12 @@ class  FilmScanner:
         return out
 
     @staticmethod
-    def differences(path, stage, scanner: Scanner):
+    def differences(frame_img, stage, scanner: Scanner):
 
-        if not path or path == "":
-            logger.error(f"Error: Invalid file path for stage {stage}")
+        if frame_img is None or frame_img.size == 0:
+            logger.error(f"Error: Invalid frame for stage {stage}")
             return None
-        user_data = scanner.scan(path)
+        user_data = scanner.scan_frame(frame_img)
         if user_data is None:
             logger.error(f"Error: Failed to analyze frame for stage {stage}")
             return None
@@ -93,30 +93,29 @@ class  FilmScanner:
 
     @staticmethod
     def verify_frame_order(frame_stages):
-        def get_frame_number(frame_path):
-            if not frame_path:
-                return -1
-            return int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+        def get_frame_number(frame_num):
+            return frame_num if frame_num is not None else -1
 
-        loading_frame = get_frame_number(frame_stages['loading'][0])
-        gather_frame = get_frame_number(frame_stages['gather'][0])
-        release_frame = get_frame_number(frame_stages['release'][0])
-        follow_frame = get_frame_number(frame_stages['follow'][0])
+        loading_frame = get_frame_number(frame_stages['loading'][2])
+        gather_frame = get_frame_number(frame_stages['gather'][2])
+        release_frame = get_frame_number(frame_stages['release'][2])
+        follow_frame = get_frame_number(frame_stages['follow'][2])
         return (loading_frame < gather_frame < release_frame < follow_frame)
 
     @staticmethod
     def find_next_best_frame(frame_scores, stage, used_frames, min_frame, max_frame):
         best_score = TOP_CAP
-        best_frame = ""
-        for frame_path, scores in frame_scores:
-            frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
-            if (frame_path not in used_frames and
+        best_frame = None
+        best_frame_num = None
+        for frame_img, frame_num, scores in frame_scores:
+            if (frame_num not in used_frames and
                     min_frame <= frame_num <= max_frame):
                 for filename, score in scores:
                     if filename == f"{stage}.json" and score < best_score:
                         best_score = score
-                        best_frame = frame_path
-        return best_frame, best_score
+                        best_frame = frame_img
+                        best_frame_num = frame_num
+        return best_frame, best_score, best_frame_num
 
     @staticmethod
     def get_video_rotation(file_path):
@@ -139,12 +138,11 @@ class  FilmScanner:
     def assign_frames_with_order(frame_scores, stages=["loading", "gather", "release", "follow"]):
         # Create a dictionary to store scores for each stage
         stage_frame_scores = {stage: [] for stage in stages}
-        for frame_path, scores in frame_scores:
-            frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+        for frame, frame_number, scores in frame_scores:
             for filename, score in scores:
                 stage = filename.split('.')[0]
                 if stage in stages:
-                    stage_frame_scores[stage].append((frame_path, frame_num, score))
+                    stage_frame_scores[stage].append((frame, frame_number, score))
 
         # Sort frames by frame number for each stage to ensure temporal consistency
         for stage in stages:
@@ -170,10 +168,10 @@ class  FilmScanner:
                         if total_score < best_total_score:
                             best_total_score = total_score
                             best_assignment = {
-                                'loading': [loading_frame, loading_score],
-                                'gather': [gather_frame, gather_score],
-                                'release': [release_frame, release_score],
-                                'follow': [follow_frame, follow_score]
+                                'loading': [loading_frame, loading_score, loading_num],
+                                'gather': [gather_frame, gather_score, gather_num],
+                                'release': [release_frame, release_score, release_num],
+                                'follow': [follow_frame, follow_score, follow_num]
                             }
 
         if best_assignment is None:
@@ -182,7 +180,6 @@ class  FilmScanner:
 
         return best_assignment
 
-    # @staticmethod
     def scan_film(self, file_path, auto_rotate=True):
         current_dir = Path(__file__).resolve().parent.parent
         feedback_file = current_dir / "data" / "feedback.json"
@@ -231,17 +228,9 @@ class  FilmScanner:
                     logger.info(f"klatka: {frame_number} (rotated {rotation} degrees), rotacja: {rotation_map[rotation]}")
 
                 logger.info(f"klatka: {frame_number}")
-                frames_dir = Path(__file__).parent / "frames"
-                os.makedirs(frames_dir, exist_ok=True)
-                frame_filename = f"frame_{frame_number:04d}.jpg"
-                frame_path = os.path.join(frames_dir, frame_filename)
-                cv2.imwrite(frame_path, frame)
 
-                scan = scanner.scan(frame_path)
-                # scan = scanner.scan(frame_path, pose)
+                scan = scanner.scan_frame(frame)
                 if scan is None:
-                    if os.path.exists(frame_path):
-                        os.remove(frame_path)
                     logger.info(f"Pominięto klatkę {frame_number} - błąd skanowania")
                     frame_number += frame_skip
                     continue
@@ -249,7 +238,7 @@ class  FilmScanner:
                 similarity = Similarity(scan)
                 similarity_scores = similarity.compare_with_exemplary_data()
                 logger.info(similarity_scores)
-                frame_scores.append((frame_path, similarity_scores))
+                frame_scores.append((frame, frame_number, similarity_scores))
                 frame_number += frame_skip
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
 
@@ -261,26 +250,36 @@ class  FilmScanner:
             logger.error("Failed to assign frames. Returning empty results.")
             return {'feedback': [], 'frames': []}  # Or raise an exception if preferred
 
+        # Save the 4 selected frames
+        frames_dir = Path(__file__).parent / "frames"
+        os.makedirs(frames_dir, exist_ok=True)
+        frames_end = []
+        for stage in ["loading", "gather", "release", "follow"]:
+            frame_img = most_similars_file[stage][0]
+            frame_num = most_similars_file[stage][2]
+            frame_filename = f"frame_{frame_num:04d}.jpg"
+            frame_path = os.path.join(frames_dir, frame_filename)
+            cv2.imwrite(frame_path, frame_img)
+            frames_end.append([frame_path, stage])
 
+        all_feedback = []
         percentage = self.precantage_output(most_similars_file)
         tab_names = ["follow", "gather", "loading", "release"]
         for stage in tab_names:
-            feedback_analysis = FeedbackAnalyzer(stage)
-            diffrances = self.differences(most_similars_file[stage][0], stage, scanner)
-            feedback_analysis.analyze_shot_form(diffrances)
+            analyzer = FeedbackAnalyzer(stage=stage)
+            differences_data = self.differences(most_similars_file[stage][0], stage, scanner)
             stage_feedback = {
                 'stage': stage,
                 'result': percentage[stage],
-                'feedback': feedback_analysis.analyze_shot_form(self.differences(most_similars_file[stage][0], stage, scanner))
+                'feedback': analyzer.analyze_shot_form(differences_data)
             }
             all_feedback.append(stage_feedback)
 
         with open(feedback_file, 'w') as plik:
             json.dump(all_feedback, plik, indent=4)
-        logger.info("\nMost similar System: frames:")
+        logger.info("\nMost similar frames:")
         logger.info(most_similars_file)
         logger.info("\n")
-        frames_end = [[most_similars_file['loading'][0],'loading'],[most_similars_file['gather'][0],'gather'],[most_similars_file['release'][0],'release'],[most_similars_file['follow'][0],'follow']]
         logger.info(percentage)
         return_json = {'feedback':all_feedback, 'frames':frames_end}
         pose.close()

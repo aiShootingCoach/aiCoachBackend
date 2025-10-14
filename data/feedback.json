@@ -3,24 +3,52 @@
         "stage": "follow",
         "result": 98,
         "feedback": {
+            "right_elbow_angle": {
+                "condition": "big more",
+                "feedback": [
+                    "Severely stiff elbow reduces follow-through fluidity, affecting consistency.",
+                    "Fully extend but relax elbow for smooth, consistent follow-through."
+                ]
+            },
             "right_wrist_angle": {
                 "condition": "big less",
                 "feedback": [
                     "Severely over-snapped wrist disrupts shot consistency.",
                     "Moderate wrist snap for consistent follow-through."
                 ]
+            },
+            "right_shoulder_angle": {
+                "condition": "big more",
+                "feedback": [
+                    "Severely tense shoulder reduces follow-through fluidity, affecting consistency.",
+                    "Relax shoulder significantly for smooth follow-through."
+                ]
+            },
+            "right_hip_angle": {
+                "condition": "more",
+                "feedback": [
+                    "Overextended hips affect landing balance.",
+                    "Extend hips fully but stay balanced."
+                ]
+            },
+            "left_wrist_angle": {
+                "condition": "big less",
+                "feedback": [
+                    "Severely flexed guide wrist disrupts follow-through balance.",
+                    "Maintain neutral guide wrist for consistent follow-through."
+                ]
             }
         }
     },
     {
         "stage": "gather",
-        "result": 81,
+        "result": 80,
         "feedback": {
             "right_elbow_angle": {
-                "condition": "more",
+                "condition": "big more",
                 "feedback": [
-                    "Flared elbow reduces shot accuracy due to misalignment.",
-                    "Tuck elbow in for proper alignment with the basket."
+                    "Severely flared elbow disrupts alignment, causing major accuracy loss.",
+                    "Keep elbow tightly tucked to align with basket."
                 ]
             },
             "right_wrist_angle": {
@@ -71,13 +99,6 @@
                     "Bend hips significantly for a balanced, athletic stance."
                 ]
             },
-            "right_knee_angle": {
-                "condition": "big less",
-                "feedback": [
-                    "Severely excessive knee bend causes major instability, slowing shot.",
-                    "Reduce knee bend significantly for better mobility and balance."
-                ]
-            },
             "left_knee_angle": {
                 "condition": "big less",
                 "feedback": [
@@ -89,22 +110,8 @@
     },
     {
         "stage": "release",
-        "result": 98,
+        "result": 99,
         "feedback": {
-            "right_elbow_angle": {
-                "condition": "big more",
-                "feedback": [
-                    "Severely early extension leads to low release point, flattening trajectory.",
-                    "Maintain significant elbow bend for higher release and better arc."
-                ]
-            },
-            "right_wrist_angle": {
-                "condition": "big less",
-                "feedback": [
-                    "Severely excessive snap causes erratic release, reducing accuracy.",
-                    "Moderate wrist snap significantly for controlled release."
-                ]
-            },
             "right_knee_angle": {
                 "condition": "big less",
                 "feedback": [
@@ -113,10 +120,10 @@
                 ]
             },
             "left_elbow_angle": {
-                "condition": "big less",
+                "condition": "less",
                 "feedback": [
-                    "Severely bent guide elbow interferes with release, causing side spin.",
-                    "Extend guide elbow slightly for clean release."
+                    "Bent guide elbow interferes with shot release.",
+                    "Extend guide elbow slightly for stability."
                 ]
             },
             "left_knee_angle": {

@@ -90,6 +90,22 @@ class Scanner:
 
 
 
+    def scan_frame(self, image):
+        # Process an image array to extract joint angles using MediaPipe Pose
+        if image is None or image.size == 0:
+            logger.error("Error: Invalid image")
+            return None
+
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        results = self.pose.process(image_rgb)
+        if not results.pose_landmarks:
+            logger.error("Error: No landmarks detected in image")
+            return None
+
+        # Convert landmarks to joint angles
+        pose_data = self.to_json(results.pose_landmarks.landmark)
+        return pose_data
+
     def scan(self, image_path):
         # Process an image to extract joint angles using MediaPipe Pose
         if not os.path.exists(image_path):
@@ -102,29 +118,4 @@ class Scanner:
             logger.error(f"Error: Unable to read image: {image_path}")
             return None
 
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        results = self.pose.process(image_rgb)
-        if not results.pose_landmarks:
-            logger.error(f"Error: No landmarks detected in image: {image_path}")
-            return None
-
-        # Convert landmarks to joint angles
-        pose_data = self.to_json(results.pose_landmarks.landmark)
-        # visualization(pose_data, image, mp_pose, mp_drawing, results)
-        return pose_data
-
-    #Alternative version without saving image
-    # ||
-    # VV
-
-
-    # def scan(self, image_rgb):
-    #     results = self.pose.process(image_rgb)
-    #     if not results.pose_landmarks:
-    #         logger.error(f"Error: No landmarks detected in image")
-    #         return None
-    #
-    #     # Convert landmarks to joint angles
-    #     pose_data = self.to_json(results.pose_landmarks.landmark)
-    #     # visualization(pose_data, image, mp_pose, mp_drawing, results)
-    #     return pose_data
+        return self.scan_frame(image)
