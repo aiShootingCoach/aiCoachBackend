@@ -1,137 +1,79 @@
-
 import logging
 
 logger = logging.getLogger(__name__)
 
-BIG_DIFFRENCE = 120
-SMALL_DIFFRENCE = 100
-weights = {
-    "loading": {
-        "Right": {
-            "Wrist": 4,
-            "Elbow": 7,
-            "Shoulder": 9,
-            "Hip": 8,
-            "Knee": 7
+class FeedbackAnalyzer:
+    BIG_DIFFERENCE = 120
+    SMALL_DIFFERENCE = 100
+
+    WEIGHTS = {
+        "loading": {
+            "Right": {
+                "Wrist": 4,
+                "Elbow": 7,
+                "Shoulder": 9,
+                "Hip": 8,
+                "Knee": 7
+            },
+            "Left": {
+                "Wrist": 3,
+                "Elbow": 6,
+                "Shoulder": 7,
+                "Hip": 8,
+                "Knee": 7
+            }
         },
-        "Left": {
-            "Wrist": 3,
-            "Elbow": 6,
-            "Shoulder": 7,
-            "Hip": 8,
-            "Knee": 7
-        }
-    },
-    "gather": {
-        "Right": {
-            "Wrist": 8,
-            "Elbow": 10,
-            "Shoulder": 8,
-            "Hip": 9,
-            "Knee": 9
+        "gather": {
+            "Right": {
+                "Wrist": 8,
+                "Elbow": 10,
+                "Shoulder": 8,
+                "Hip": 9,
+                "Knee": 9
+            },
+            "Left": {
+                "Wrist": 4,
+                "Elbow": 8,
+                "Shoulder": 7,
+                "Hip": 9,
+                "Knee": 9
+            }
         },
-        "Left": {
-            "Wrist": 4,
-            "Elbow": 8,
-            "Shoulder": 7,
-            "Hip": 9,
-            "Knee": 9
-        }
-    },
-    "release": {
-        "Right": {
-            "Wrist": 10,
-            "Elbow": 9,
-            "Shoulder": 10,
-            "Hip": 5,
-            "Knee": 6
+        "release": {
+            "Right": {
+                "Wrist": 10,
+                "Elbow": 9,
+                "Shoulder": 10,
+                "Hip": 5,
+                "Knee": 6
+            },
+            "Left": {
+                "Wrist": 5,
+                "Elbow": 6,
+                "Shoulder": 7,
+                "Hip": 5,
+                "Knee": 6
+            }
         },
-        "Left": {
-            "Wrist": 5,
-            "Elbow": 6,
-            "Shoulder": 7,
-            "Hip": 5,
-            "Knee": 6
-        }
-    },
-    "follow": {
-        "Right": {
-            "Wrist": 9,
-            "Elbow": 9 ,
-            "Shoulder": 9,
-            "Hip": 6,
-            "Knee": 5
-        },
-        "Left": {
-            "Wrist": 9,
-            "Elbow": 9,
-            "Shoulder": 9,
-            "Hip": 6,
-            "Knee": 5
+        "follow": {
+            "Right": {
+                "Wrist": 9,
+                "Elbow": 9 ,
+                "Shoulder": 9,
+                "Hip": 6,
+                "Knee": 5
+            },
+            "Left": {
+                "Wrist": 9,
+                "Elbow": 9,
+                "Shoulder": 9,
+                "Hip": 6,
+                "Knee": 5
+            }
         }
     }
-}
 
-def analyze_shot_form(angle_differences, stage=None):
-    if angle_differences is None:
-        return {}
-
-    if stage is None or stage not in weights:
-        stage = "release"  # Default to release stage
-
-    angle_scores = {}
-    required_angles = [
-        "right_elbow_angle", "right_wrist_angle", "right_shoulder_angle",
-        "right_hip_angle", "right_knee_angle", "left_elbow_angle",
-        "left_wrist_angle", "left_shoulder_angle", "left_hip_angle",
-        "left_knee_angle"
-    ]
-
-    for angle in required_angles:
-        if angle not in angle_differences or angle_differences[angle] is None:
-            continue
-        if angle.startswith("right_"):
-            side = "Right"
-            joint = angle.replace("right_", "").replace("_angle", "").capitalize()
-        else:
-            side = "Left"
-            joint = angle.replace("left_", "").replace("_angle", "").capitalize()
-        angle_scores[angle] = angle_differences[angle] * weights[stage][side][joint]
-
-    report = {}
-    for angle_name, score in angle_scores.items():
-        try:
-            issue = ""
-            condition = None
-            if score > BIG_DIFFRENCE:
-                condition = "big more"
-            elif score > SMALL_DIFFRENCE:
-                condition = "more"
-            elif score < -1*BIG_DIFFRENCE:
-                condition = "big less"
-            elif score < -1*SMALL_DIFFRENCE:
-                condition = "less"
-            if condition:
-                issue = get_angle_feedback(angle_name, stage, condition)
-                report[angle_name] = {"condition": condition, "feedback": issue}
-        except (KeyError, TypeError):
-            continue
-
-    return report
-
-def get_angle_feedback(angle_name, stage, condition):
-    """
-    Returns issue description and correction for a specific angle deviation.
-
-    Args:
-        angle_name: Str, name of the angle (e.g., "right_elbow_angle").
-        stage: Str, shooting stage ("loading", "gather", "release", "follow").
-        condition: Str, "big more", "more", "big less", or "less".
-
-    Returns:
-        Tuple of (issue_description, correction_suggestion).
-    """
-    feedback = {
+    FEEDBACK = {
         "right_elbow_angle": {
             "loading": {
                 "big more": ("Severely extended elbow leads to ball loaded too low, slowing release.",
@@ -554,24 +496,85 @@ def get_angle_feedback(angle_name, stage, condition):
         }
     }
 
-    return feedback.get(angle_name, {}).get(stage, {}).get(condition, ("", ""))
+    def __init__(self, stage=None):
+        if stage is None or stage not in self.WEIGHTS:
+            self.stage = "release"
+        else:
+            self.stage = stage
 
-if __name__ == "__main__":
-    example_differences = {
-        "right_elbow_angle": 50,    # Triggers "big more"
-        "right_wrist_angle": 24.38, # Triggers "more"
-        "right_shoulder_angle": -6.6, # No trigger
-        "right_hip_angle": -45,     # Triggers "big less"
-        "right_knee_angle": -21.27, # Triggers "less"
-        "left_elbow_angle": 5.38,   # No trigger
-        "left_wrist_angle": -8.69,  # No trigger
-        "left_hip_angle": -51.31,   # Triggers "big less"
-        "left_knee_angle": -56.02   # Triggers "big less"
-    }
-    analysis = analyze_shot_form(example_differences, stage="release")
-    logger.info("# Basketball Shot Form Analysis\n")
-    for angle, data in analysis.items():
-        condition, (issue, correction) = data["condition"], data["feedback"]
-        logger.info(f"**{angle.replace('_', ' ').title()}** ({condition})")
-        logger.info(f"- Issue: {issue}")
-        logger.info(f"- Correction: {correction}\n")
+    def analyze_shot_form(self, angle_differences):
+        if angle_differences is None:
+            return {}
+
+        angle_scores = {}
+        required_angles = [
+            "right_elbow_angle", "right_wrist_angle", "right_shoulder_angle",
+            "right_hip_angle", "right_knee_angle", "left_elbow_angle",
+            "left_wrist_angle", "left_shoulder_angle", "left_hip_angle",
+            "left_knee_angle"
+        ]
+
+        for angle in required_angles:
+            if angle not in angle_differences or angle_differences[angle] is None:
+                continue
+            if angle.startswith("right_"):
+                side = "Right"
+                joint = angle.replace("right_", "").replace("_angle", "").capitalize()
+            else:
+                side = "Left"
+                joint = angle.replace("left_", "").replace("_angle", "").capitalize()
+            angle_scores[angle] = angle_differences[angle] * self.WEIGHTS[self.stage][side][joint]
+
+        report = {}
+        for angle_name, score in angle_scores.items():
+            try:
+                condition = None
+                if score > self.BIG_DIFFERENCE:
+                    condition = "big more"
+                elif score > self.SMALL_DIFFERENCE:
+                    condition = "more"
+                elif score < -1 * self.BIG_DIFFERENCE:
+                    condition = "big less"
+                elif score < -1 * self.SMALL_DIFFERENCE:
+                    condition = "less"
+                if condition:
+                    issue = self.get_angle_feedback(angle_name, condition)
+                    report[angle_name] = {"condition": condition, "feedback": issue}
+            except (KeyError, TypeError):
+                continue
+
+        return report
+
+    def get_angle_feedback(self, angle_name, condition):
+        """
+        Returns issue description and correction for a specific angle deviation.
+
+        Args:
+            angle_name: Str, name of the angle (e.g., "right_elbow_angle").
+            condition: Str, "big more", "more", "big less", or "less".
+
+        Returns:
+            Tuple of (issue_description, correction_suggestion).
+        """
+        return self.FEEDBACK.get(angle_name, {}).get(self.stage, {}).get(condition, ("", ""))
+
+# if __name__ == "__main__":
+#     example_differences = {
+#         "right_elbow_angle": 50,    # Triggers "big more"
+#         "right_wrist_angle": 24.38, # Triggers "more"
+#         "right_shoulder_angle": -6.6, # No trigger
+#         "right_hip_angle": -45,     # Triggers "big less"
+#         "right_knee_angle": -21.27, # Triggers "less"
+#         "left_elbow_angle": 5.38,   # No trigger
+#         "left_wrist_angle": -8.69,  # No trigger
+#         "left_hip_angle": -51.31,   # Triggers "big less"
+#         "left_knee_angle": -56.02   # Triggers "big less"
+#     }
+#     analyzer = ShotFormAnalyzer(stage="release")
+#     analysis = analyzer.analyze_shot_form(example_differences)
+#     logger.info("# Basketball Shot Form Analysis\n")
+#     for angle, data in analysis.items():
+#         condition, (issue, correction) = data["condition"], data["feedback"]
+#         logger.info(f"**{angle.replace('_', ' ').title()}** ({condition})")
+#         logger.info(f"- Issue: {issue}")
+#         logger.info(f"- Correction: {correction}\n")
