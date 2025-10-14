@@ -6,7 +6,8 @@ import json
 import subprocess
 import re
 from utils.scanner import Scanner
-from utils import feedback, similarity
+from utils import feedback
+from utils.similarity import Similarity
 import mediapipe as mp
 import logging
 
@@ -242,7 +243,8 @@ def scan_film(file_path, auto_rotate=True):
                 frame_number += frame_skip
                 continue
 
-            similarity_scores = similarity.compare_with_exemplary_data(scan)
+            similarity = Similarity(scan)
+            similarity_scores = similarity.compare_with_exemplary_data()
             logger.info(similarity_scores)
             frame_scores.append((frame_path, similarity_scores))
             frame_number += frame_skip
@@ -251,8 +253,10 @@ def scan_film(file_path, auto_rotate=True):
     finally:
         cap.release()
 
-
     most_similars_file = assign_frames_with_order(frame_scores)
+    if most_similars_file is None:
+        logger.error("Failed to assign frames. Returning empty results.")
+        return {'feedback': [], 'frames': []}  # Or raise an exception if preferred
 
     all_feedback = []
     percentage = precantage_output(most_similars_file)

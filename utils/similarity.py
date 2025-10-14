@@ -76,137 +76,130 @@ weights = {
     }
 }
 
-def read_json_file(file_path: str) -> dict:
-    # Read and parse a JSON file
-    with open(file_path, 'r') as file:
-        return json.load(file)
+class Similarity:
+    def __init__(self, user_data: dict):
+        self.user_data = user_data
 
-def print_json_structure():
-    # logger.info the structure (keys) of all JSON files in the exemplary data directory
-    ex_path =Path(__file__).parent / f"../data/exemplary_data/"
-    for file in os.listdir(ex_path):
-        if file.endswith('.json'):
-            data = read_json_file(os.path.join(ex_path, file))
-            logger.info("Available fields:", list(data.keys()))
+    @staticmethod
+    def read_json_file(file_path: str) -> dict:
+        with open(file_path, 'r') as file:
+            return json.load(file)
 
-def get_weight(angle_name, stage_name) -> float:
-    # Retrieve the weight for a specific angle and stage
-    stage_mapping = {
-        'loading.json': 'Load',
-        'gather.json': 'Gather',
-        'release.json': 'Release',
-        'follow.json': 'FollowThrough'
-    }
+    @staticmethod
+    def print_json_structure():
+        ex_path = Path(__file__).parent / "../data/exemplary_data/"
+        for file in os.listdir(ex_path):
+            if file.endswith('.json'):
+                data = Similarity.read_json_file(os.path.join(ex_path, file))  # Use class name for static call
+                logger.info("Available fields: %s", list(data.keys()))
 
-    # Determine side (Right/Left) based on angle name
-    side = 'Right' if angle_name.startswith('right_') else 'Left'
+    @staticmethod
+    def get_weight(angle_name: str, stage_name: str) -> float:
+        stage_mapping = {
+            'loading.json': 'Load',
+            'gather.json': 'Gather',
+            'release.json': 'Release',
+            'follow.json': 'FollowThrough'
+        }
 
-    # Map angle types to weight dictionary keys
-    angle_type_mapping = {
-        'wrist': 'Wrist',
-        'elbow': 'Elbow',
-        'shoulder': 'Shoulder',
-        'hip': 'Hip',
-        'knee': 'Knee'
-    }
+        side = 'Right' if angle_name.startswith('right_') else 'Left'
 
-    # Extract angle type from angle name (e.g., 'right_elbow_angle' -> 'elbow')
-    angle_type = angle_name.split('_')[1].split('_')[0]
+        angle_type_mapping = {
+            'wrist': 'Wrist',
+            'elbow': 'Elbow',
+            'shoulder': 'Shoulder',
+            'hip': 'Hip',
+            'knee': 'Knee'
+        }
 
-    # Return default weight if stage not found
-    if stage_name not in stage_mapping:
-        return 1
+        angle_type = angle_name.split('_')[1]
 
-    stage = stage_mapping[stage_name]
-    angle_type = angle_type_mapping.get(angle_type, '')
+        if stage_name not in stage_mapping:
+            return 1
 
-    try:
-        return weights[stage][side][angle_type]
-    except KeyError:
-        return 1  # Default weight in case of error
-
-def compare_with_exemplary_data(user_data: dict) -> List[tuple]:
-    # Compare user joint angles with exemplary data and compute similarity scores
-    # ex_path = '/home/kacper/zajecia_inf/PythonProject/data/exemplary_data/'
-    ex_path = Path(__file__).parent / "../data/exemplary_data"
-    files = os.listdir(ex_path)
-    similarity_results = []
-
-    # logger.info System: logger.info structure of the first exemplary data file
-
-
-    if files:
-        first_file = read_json_file(os.path.join(ex_path, files[0]))
-        logger.info("Structure of first file: %s", list(first_file.keys()))
-
-    # Process each exemplary data file
-    for file in reversed(files):
-        if not file.endswith('.json'):
-            continue
+        stage = stage_mapping[stage_name]
+        angle_type = angle_type_mapping.get(angle_type, '')
 
         try:
-            ex_file = read_json_file(os.path.join(ex_path, file))
+            return weights[stage][side][angle_type]
+        except KeyError:
+            return 1
 
-            # Collect common angles between user and exemplary data
-            common_angles = []
-            user_angles = []
+    def compare_with_exemplary_data(self) -> List[tuple]:
+        ex_path = Path(__file__).parent / "../data/exemplary_data"
+        files = os.listdir(ex_path)
+        similarity_results = []
 
-            for key in ex_file.keys():
-                if key.endswith('_angle') and key in user_data:
-                    common_angles.append(ex_file[key])
-                    user_angles.append(user_data[key])
+        if files:
+            first_file = self.read_json_file(os.path.join(ex_path, files[0]))
+            logger.info("Structure of first file: %s", list(first_file.keys()))
 
-            if not common_angles:
-                logger.info(f"No common angles in file {file}")
+        for file in reversed(files):
+            if not file.endswith('.json'):
                 continue
 
-            # Calculate weighted similarity score (weighted mean squared error)
-            full_weight = 0
-            similarity_score = 0
-            for user_angle, compare_angle in zip(user_angles, common_angles):
-                weight = get_weight(key, file)
-                similarity_score += (user_angle - compare_angle) * (user_angle - compare_angle) * weight * weight
-                full_weight += weight * weight
+            try:
+                ex_file = self.read_json_file(os.path.join(ex_path, file))
 
-            similarity_score = similarity_score / full_weight
+                # Collect common angles with keys
+                common = [
+                    (key, ex_file[key], self.user_data[key])
+                    for key in ex_file
+                    if key.endswith('_angle') and key in self.user_data
+                ]
 
-            if user_data['right_top_difference'] != ex_file['right_top_difference'] or user_data['left_top_difference'] != ex_file['left_top_difference']:
-                similarity_score = 10000
+                if not common:
+                    logger.info(f"No common angles in file {file}")
+                    continue
 
-            similarity_results.append((file, similarity_score))
+                # Calculate weighted similarity score
+                full_weight = 0
+                similarity_score = 0
+                for key, compare_angle, user_angle in common:
+                    weight = Similarity.get_weight(key, file)  # Static call
+                    similarity_score += (user_angle - compare_angle) ** 2 * weight ** 2
+                    full_weight += weight ** 2
 
-        except Exception as e:
-            logger.info(f"Error processing file {file}: {str(e)}")
-            continue
+                similarity_score = similarity_score / full_weight if full_weight > 0 else 0
 
-    return similarity_results
+                if (self.user_data.get('right_top_difference', 0) != ex_file.get('right_top_difference', 0) or
+                    self.user_data.get('left_top_difference', 0) != ex_file.get('left_top_difference', 0)):
+                    similarity_score = 10000
 
-def main():
-    # Test function to compare test data with exemplary data
-    test_data = {
-        'right_elbow_angle': 111.23,
-        'right_wrist_angle': 171.75,
-        'right_shoulder_angle': 29.27,
-        'right_hip_angle': 139.86,
-        'right_knee_angle': 137.18,
-        'left_elbow_angle': 133.93,
-        'left_wrist_angle': 156.84,
-        'left_hip_angle': 113.99,
-        'left_knee_angle': 123.23
-    }
+                similarity_results.append((file, similarity_score))
 
-    try:
-        scores = compare_with_exemplary_data(test_data)
-        if scores:
-            logger.info("\nSimilarity results (lower score = better match):")
-            logger.info("-" * 50)
-            for filename, score in scores:
-                logger.info(f"{filename}: {score:.2f}")
-        else:
-            logger.info("No comparison results found")
+            except Exception as e:
+                logger.info(f"Error processing file {file}: {str(e)}")
+                continue
 
-    except Exception as e:
-        logger.error(f"Error during test: {str(e)}")
+        return similarity_results
 
-if __name__ == '__main__':
-    main()
+# def main():
+#     # Test function to compare test data with exemplary data
+#     test_data = {
+#         'right_elbow_angle': 111.23,
+#         'right_wrist_angle': 171.75,
+#         'right_shoulder_angle': 29.27,
+#         'right_hip_angle': 139.86,
+#         'right_knee_angle': 137.18,
+#         'left_elbow_angle': 133.93,
+#         'left_wrist_angle': 156.84,
+#         'left_hip_angle': 113.99,
+#         'left_knee_angle': 123.23
+#     }
+#
+#     try:
+#         scores = compare_with_exemplary_data(test_data)
+#         if scores:
+#             logger.info("\nSimilarity results (lower score = better match):")
+#             logger.info("-" * 50)
+#             for filename, score in scores:
+#                 logger.info(f"{filename}: {score:.2f}")
+#         else:
+#             logger.info("No comparison results found")
+#
+#     except Exception as e:
+#         logger.error(f"Error during test: {str(e)}")
+#
+# if __name__ == '__main__':
+#     main()
