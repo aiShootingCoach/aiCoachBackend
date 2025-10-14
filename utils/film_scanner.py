@@ -6,7 +6,7 @@ import json
 import subprocess
 import re
 from utils.scanner import Scanner
-from utils import feedback
+from utils.feedback import FeedbackAnalyzer
 from utils.similarity import Similarity
 import mediapipe as mp
 import logging
@@ -261,8 +261,9 @@ def scan_film(file_path, auto_rotate=True):
     all_feedback = []
     percentage = precantage_output(most_similars_file)
     tab_names = ["follow", "gather", "loading", "release"]
+    feedback_analysis = FeedbackAnalyzer()
     for stage in tab_names:
-        feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner), stage)
+        feedback_analysis.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner), stage)
         stage_feedback = {
             'stage': stage,
             'result': percentage[stage],
