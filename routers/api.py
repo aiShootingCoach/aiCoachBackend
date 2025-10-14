@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from utils import api_additional
-from utils import film_scanner
+from utils.film_scanner import FilmScanner
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 
@@ -46,7 +46,7 @@ async def upload_video(file: UploadFile = File(...)):
     finally:
         # Always close the file
         file.file.close()
-
+    film_scanner = FilmScanner()
     return_json = film_scanner.scan_film(str(destination_path))
 
     frames  = api_additional.attach_frames(return_json)

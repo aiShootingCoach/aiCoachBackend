@@ -19,275 +19,279 @@ TOP_CAP = 100000
 PERCENTAGE_BASE = 2500
 
 
-def save_feedback_to_json(data, filename):
-    with open(filename, 'w') as plik:
-        json.dump(data, plik, indent=4)
+class  FilmScanner:
 
+    @staticmethod
+    def save_feedback_to_json(data, filename):
+        with open(filename, 'w') as plik:
+            json.dump(data, plik, indent=4)
 
-def precantage_output(pose_data):
-    follow = pose_data['follow'][1]
-    gather = pose_data['gather'][1]
-    loading = pose_data['loading'][1]
-    release = pose_data['release'][1]
-    follow = round((PERCENTAGE_BASE - follow) / PERCENTAGE_BASE*100)
-    if follow < 0: follow = 0
-    gather = round((PERCENTAGE_BASE - gather) / PERCENTAGE_BASE*100)
-    if gather < 0: gather = 0
-    loading = round((PERCENTAGE_BASE - loading) / PERCENTAGE_BASE*100)
-    if loading < 0: loading = 0
-    release = round((PERCENTAGE_BASE - release) / PERCENTAGE_BASE*100)
-    if release < 0: release = 0
-    out = {'follow': follow, 'gather': gather, 'loading': loading, 'release': release}
-    return out
+    @staticmethod
+    def precantage_output(pose_data):
+        follow = pose_data['follow'][1]
+        gather = pose_data['gather'][1]
+        loading = pose_data['loading'][1]
+        release = pose_data['release'][1]
+        follow = round((PERCENTAGE_BASE - follow) / PERCENTAGE_BASE*100)
+        if follow < 0: follow = 0
+        gather = round((PERCENTAGE_BASE - gather) / PERCENTAGE_BASE*100)
+        if gather < 0: gather = 0
+        loading = round((PERCENTAGE_BASE - loading) / PERCENTAGE_BASE*100)
+        if loading < 0: loading = 0
+        release = round((PERCENTAGE_BASE - release) / PERCENTAGE_BASE*100)
+        if release < 0: release = 0
+        out = {'follow': follow, 'gather': gather, 'loading': loading, 'release': release}
+        return out
 
+    @staticmethod
+    def differences(path, stage, scanner: Scanner):
 
-
-
-def differences(path, stage, scanner: Scanner):
-
-    if not path or path == "":
-        logger.error(f"Error: Invalid file path for stage {stage}")
-        return None
-    user_data = scanner.scan(path)
-    if user_data is None:
-        logger.error(f"Error: Failed to analyze frame for stage {stage}")
-        return None
-    exemplary_data_path = Path(__file__).parent / f"../data/exemplary_data/{stage}.json"
-    if not os.path.exists(exemplary_data_path):
-        logger.error(f"Error: Exemplary data file for stage {stage} not found")
-        return None
-    try:
-        with open(exemplary_data_path, 'r') as f:
-            exemplar_data = json.load(f)
-    except json.JSONDecodeError:
-        logger.error(f"Error: Invalid format of exemplary data file for stage {stage}")
-        return None
-    difference = {
-        "right_elbow_angle": user_data["right_elbow_angle"] - exemplar_data["right_elbow_angle"],
-        "right_wrist_angle": user_data["right_wrist_angle"] - exemplar_data["right_wrist_angle"],
-        "right_shoulder_angle": user_data["right_shoulder_angle"] - exemplar_data["right_shoulder_angle"],
-        "right_hip_angle": user_data["right_hip_angle"] - exemplar_data["right_hip_angle"],
-        "right_knee_angle": user_data["right_knee_angle"] - exemplar_data["right_knee_angle"],
-        "left_elbow_angle": user_data["left_elbow_angle"] - exemplar_data["left_elbow_angle"],
-        "left_wrist_angle": user_data["left_wrist_angle"] - exemplar_data["left_wrist_angle"],
-        "left_hip_angle": user_data["left_hip_angle"] - exemplar_data["left_hip_angle"],
-        "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"],
-    }
-    return difference
-
-
-def get_newest_file(directory):
-    files = [os.path.join(directory, f) for f in os.listdir(directory)]
-    if not files:
-        return None
-    newest_file = max(files, key=os.path.getmtime)
-    return newest_file
-
-
-def is_frame_path_used(most_similars_file, frame_path):
-    for value in most_similars_file.values():
-        if value[0] == frame_path:
-            return True
-    return False
-
-
-def verify_frame_order(frame_stages):
-    def get_frame_number(frame_path):
-        if not frame_path:
-            return -1
-        return int(os.path.basename(frame_path).split('_')[1].split('.')[0])
-
-    loading_frame = get_frame_number(frame_stages['loading'][0])
-    gather_frame = get_frame_number(frame_stages['gather'][0])
-    release_frame = get_frame_number(frame_stages['release'][0])
-    follow_frame = get_frame_number(frame_stages['follow'][0])
-    return (loading_frame < gather_frame < release_frame < follow_frame)
-
-
-def find_next_best_frame(frame_scores, stage, used_frames, min_frame, max_frame):
-    best_score = TOP_CAP
-    best_frame = ""
-    for frame_path, scores in frame_scores:
-        frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
-        if (frame_path not in used_frames and
-                min_frame <= frame_num <= max_frame):
-            for filename, score in scores:
-                if filename == f"{stage}.json" and score < best_score:
-                    best_score = score
-                    best_frame = frame_path
-    return best_frame, best_score
-
-
-def get_video_rotation(file_path):
-    """Retrieve the rotation angle from video metadata using ffprobe."""
-    try:
-        result = subprocess.run(
-            ['ffprobe', '-v', 'error', '-show_streams', '-select_streams', 'v:0', file_path],
-            capture_output=True, text=True
-        )
-        output = result.stdout
-        match = re.search(r'rotation=(-?\d+)', output)
-        if match:
-            return int(match.group(1))
-        return 0  # No rotation metadata found
-    except subprocess.CalledProcessError:
-        logger.error(f"Error: Failed to run ffprobe on {file_path}")
-        return 0
-
-def assign_frames_with_order(frame_scores, stages=["loading", "gather", "release", "follow"]):
-    # Create a dictionary to store scores for each stage
-    stage_frame_scores = {stage: [] for stage in stages}
-    for frame_path, scores in frame_scores:
-        frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
-        for filename, score in scores:
-            stage = filename.split('.')[0]
-            if stage in stages:
-                stage_frame_scores[stage].append((frame_path, frame_num, score))
-
-    # Sort frames by frame number for each stage to ensure temporal consistency
-    for stage in stages:
-        stage_frame_scores[stage].sort(key=lambda x: x[1])  # Sort by frame number
-
-    # Find the best combination of frames that satisfies the temporal order
-    best_total_score = float('inf')
-    best_assignment = None
-
-    # Iterate through all possible combinations of frames for each stage
-    for loading_frame, loading_num, loading_score in stage_frame_scores['loading']:
-        for gather_frame, gather_num, gather_score in stage_frame_scores['gather']:
-            if gather_num <= loading_num:
-                continue  # Enforce loading < gather
-            for release_frame, release_num, release_score in stage_frame_scores['release']:
-                if release_num <= gather_num:
-                    continue  # Enforce gather < release
-                for follow_frame, follow_num, follow_score in stage_frame_scores['follow']:
-                    if follow_num <= release_num:
-                        continue  # Enforce release < follow
-                    # Calculate total score for this combination
-                    total_score = loading_score + gather_score + release_score + follow_score
-                    if total_score < best_total_score:
-                        best_total_score = total_score
-                        best_assignment = {
-                            'loading': [loading_frame, loading_score],
-                            'gather': [gather_frame, gather_score],
-                            'release': [release_frame, release_score],
-                            'follow': [follow_frame, follow_score]
-                        }
-
-    if best_assignment is None:
-        logger.error("Error: No valid frame assignment found that satisfies temporal order")
-        return None
-
-    return best_assignment
-
-def scan_film(file_path, auto_rotate=True):
-    current_dir = Path(__file__).resolve().parent.parent
-    feedback_file = current_dir / "data" / "feedback.json"
-    feedback_file.parent.mkdir(parents=True, exist_ok=True)
-
-    newest_file = file_path
-    if newest_file is None:
-        logger.error("Error: no files in dri")
-        return
-
-    cap = cv2.VideoCapture(newest_file)
-    if not cap.isOpened():
-        logger.error("Error: Can't play video")
-        return
-
-    # Get video rotation from metadata
-    rotation = get_video_rotation(newest_file) if auto_rotate else 0
-    rotation_map = {
-        -90: cv2.ROTATE_90_CLOCKWISE,
-        90: cv2.ROTATE_90_COUNTERCLOCKWISE,
-        180: cv2.ROTATE_180,
-        -180: cv2.ROTATE_180,
-        270: cv2.ROTATE_90_COUNTERCLOCKWISE,
-        -270: cv2.ROTATE_90_CLOCKWISE
-    }
-
-    frame_scores = []
-    # Initialize MediaPipe Pose and drawing utilities
-    mp_pose = mp.solutions.pose
-    pose = mp_pose.Pose()
-
-    scanner = Scanner(pose)
-
-    try:
-        frame_number = 0
-        max_frames = 1000
-        frame_skip = FRAME_SKIP
-        while frame_number < max_frames:
-            ret, frame = cap.read()
-            if not ret:
-                break
-
-            # Apply rotation to counteract metadata-driven rotation
-            if rotation in rotation_map:
-                frame = cv2.rotate(frame, rotation_map[rotation])
-                logger.info(f"klatka: {frame_number} (rotated {rotation} degrees), rotacja: {rotation_map[rotation]}")
-
-            logger.info(f"klatka: {frame_number}")
-            frames_dir = Path(__file__).parent / "frames"
-            os.makedirs(frames_dir, exist_ok=True)
-            frame_filename = f"frame_{frame_number:04d}.jpg"
-            frame_path = os.path.join(frames_dir, frame_filename)
-            cv2.imwrite(frame_path, frame)
-
-            scan = scanner.scan(frame_path)
-            # scan = scanner.scan(frame_path, pose)
-            if scan is None:
-                if os.path.exists(frame_path):
-                    os.remove(frame_path)
-                logger.info(f"Pominięto klatkę {frame_number} - błąd skanowania")
-                frame_number += frame_skip
-                continue
-
-            similarity = Similarity(scan)
-            similarity_scores = similarity.compare_with_exemplary_data()
-            logger.info(similarity_scores)
-            frame_scores.append((frame_path, similarity_scores))
-            frame_number += frame_skip
-            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-
-    finally:
-        cap.release()
-
-    most_similars_file = assign_frames_with_order(frame_scores)
-    if most_similars_file is None:
-        logger.error("Failed to assign frames. Returning empty results.")
-        return {'feedback': [], 'frames': []}  # Or raise an exception if preferred
-
-    all_feedback = []
-    percentage = precantage_output(most_similars_file)
-    tab_names = ["follow", "gather", "loading", "release"]
-    feedback_analysis = FeedbackAnalyzer()
-    for stage in tab_names:
-        feedback_analysis.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner), stage)
-        stage_feedback = {
-            'stage': stage,
-            'result': percentage[stage],
-            'feedback': feedback.analyze_shot_form(differences(most_similars_file[stage][0], stage, scanner), stage)
+        if not path or path == "":
+            logger.error(f"Error: Invalid file path for stage {stage}")
+            return None
+        user_data = scanner.scan(path)
+        if user_data is None:
+            logger.error(f"Error: Failed to analyze frame for stage {stage}")
+            return None
+        exemplary_data_path = Path(__file__).parent / f"../data/exemplary_data/{stage}.json"
+        if not os.path.exists(exemplary_data_path):
+            logger.error(f"Error: Exemplary data file for stage {stage} not found")
+            return None
+        try:
+            with open(exemplary_data_path, 'r') as f:
+                exemplar_data = json.load(f)
+        except json.JSONDecodeError:
+            logger.error(f"Error: Invalid format of exemplary data file for stage {stage}")
+            return None
+        difference = {
+            "right_elbow_angle": user_data["right_elbow_angle"] - exemplar_data["right_elbow_angle"],
+            "right_wrist_angle": user_data["right_wrist_angle"] - exemplar_data["right_wrist_angle"],
+            "right_shoulder_angle": user_data["right_shoulder_angle"] - exemplar_data["right_shoulder_angle"],
+            "right_hip_angle": user_data["right_hip_angle"] - exemplar_data["right_hip_angle"],
+            "right_knee_angle": user_data["right_knee_angle"] - exemplar_data["right_knee_angle"],
+            "left_elbow_angle": user_data["left_elbow_angle"] - exemplar_data["left_elbow_angle"],
+            "left_wrist_angle": user_data["left_wrist_angle"] - exemplar_data["left_wrist_angle"],
+            "left_hip_angle": user_data["left_hip_angle"] - exemplar_data["left_hip_angle"],
+            "left_knee_angle": user_data["left_knee_angle"] - exemplar_data["left_knee_angle"],
         }
-        all_feedback.append(stage_feedback)
+        return difference
 
-    with open(feedback_file, 'w') as plik:
-        json.dump(all_feedback, plik, indent=4)
-    logger.info("\nMost similar System: frames:")
-    logger.info(most_similars_file)
-    logger.info("\n")
-    frames_end = [[most_similars_file['loading'][0],'loading'],[most_similars_file['gather'][0],'gather'],[most_similars_file['release'][0],'release'],[most_similars_file['follow'][0],'follow']]
-    logger.info(percentage)
-    return_json = {'feedback':all_feedback, 'frames':frames_end}
-    pose.close()
-    return return_json
+    @staticmethod
+    def get_newest_file(directory):
+        files = [os.path.join(directory, f) for f in os.listdir(directory)]
+        if not files:
+            return None
+        newest_file = max(files, key=os.path.getmtime)
+        return newest_file
+
+    @staticmethod
+    def is_frame_path_used(most_similars_file, frame_path):
+        for value in most_similars_file.values():
+            if value[0] == frame_path:
+                return True
+        return False
+
+    @staticmethod
+    def verify_frame_order(frame_stages):
+        def get_frame_number(frame_path):
+            if not frame_path:
+                return -1
+            return int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+
+        loading_frame = get_frame_number(frame_stages['loading'][0])
+        gather_frame = get_frame_number(frame_stages['gather'][0])
+        release_frame = get_frame_number(frame_stages['release'][0])
+        follow_frame = get_frame_number(frame_stages['follow'][0])
+        return (loading_frame < gather_frame < release_frame < follow_frame)
+
+    @staticmethod
+    def find_next_best_frame(frame_scores, stage, used_frames, min_frame, max_frame):
+        best_score = TOP_CAP
+        best_frame = ""
+        for frame_path, scores in frame_scores:
+            frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+            if (frame_path not in used_frames and
+                    min_frame <= frame_num <= max_frame):
+                for filename, score in scores:
+                    if filename == f"{stage}.json" and score < best_score:
+                        best_score = score
+                        best_frame = frame_path
+        return best_frame, best_score
+
+    @staticmethod
+    def get_video_rotation(file_path):
+        """Retrieve the rotation angle from video metadata using ffprobe."""
+        try:
+            result = subprocess.run(
+                ['ffprobe', '-v', 'error', '-show_streams', '-select_streams', 'v:0', file_path],
+                capture_output=True, text=True
+            )
+            output = result.stdout
+            match = re.search(r'rotation=(-?\d+)', output)
+            if match:
+                return int(match.group(1))
+            return 0  # No rotation metadata found
+        except subprocess.CalledProcessError:
+            logger.error(f"Error: Failed to run ffprobe on {file_path}")
+            return 0
+
+    @staticmethod
+    def assign_frames_with_order(frame_scores, stages=["loading", "gather", "release", "follow"]):
+        # Create a dictionary to store scores for each stage
+        stage_frame_scores = {stage: [] for stage in stages}
+        for frame_path, scores in frame_scores:
+            frame_num = int(os.path.basename(frame_path).split('_')[1].split('.')[0])
+            for filename, score in scores:
+                stage = filename.split('.')[0]
+                if stage in stages:
+                    stage_frame_scores[stage].append((frame_path, frame_num, score))
+
+        # Sort frames by frame number for each stage to ensure temporal consistency
+        for stage in stages:
+            stage_frame_scores[stage].sort(key=lambda x: x[1])  # Sort by frame number
+
+        # Find the best combination of frames that satisfies the temporal order
+        best_total_score = float('inf')
+        best_assignment = None
+
+        # Iterate through all possible combinations of frames for each stage
+        for loading_frame, loading_num, loading_score in stage_frame_scores['loading']:
+            for gather_frame, gather_num, gather_score in stage_frame_scores['gather']:
+                if gather_num <= loading_num:
+                    continue  # Enforce loading < gather
+                for release_frame, release_num, release_score in stage_frame_scores['release']:
+                    if release_num <= gather_num:
+                        continue  # Enforce gather < release
+                    for follow_frame, follow_num, follow_score in stage_frame_scores['follow']:
+                        if follow_num <= release_num:
+                            continue  # Enforce release < follow
+                        # Calculate total score for this combination
+                        total_score = loading_score + gather_score + release_score + follow_score
+                        if total_score < best_total_score:
+                            best_total_score = total_score
+                            best_assignment = {
+                                'loading': [loading_frame, loading_score],
+                                'gather': [gather_frame, gather_score],
+                                'release': [release_frame, release_score],
+                                'follow': [follow_frame, follow_score]
+                            }
+
+        if best_assignment is None:
+            logger.error("Error: No valid frame assignment found that satisfies temporal order")
+            return None
+
+        return best_assignment
+
+    # @staticmethod
+    def scan_film(self, file_path, auto_rotate=True):
+        current_dir = Path(__file__).resolve().parent.parent
+        feedback_file = current_dir / "data" / "feedback.json"
+        feedback_file.parent.mkdir(parents=True, exist_ok=True)
+
+        newest_file = file_path
+        if newest_file is None:
+            logger.error("Error: no files in dri")
+            return
+
+        cap = cv2.VideoCapture(newest_file)
+        if not cap.isOpened():
+            logger.error("Error: Can't play video")
+            return
+
+        # Get video rotation from metadata
+        rotation = self.get_video_rotation(newest_file) if auto_rotate else 0
+        rotation_map = {
+            -90: cv2.ROTATE_90_CLOCKWISE,
+            90: cv2.ROTATE_90_COUNTERCLOCKWISE,
+            180: cv2.ROTATE_180,
+            -180: cv2.ROTATE_180,
+            270: cv2.ROTATE_90_COUNTERCLOCKWISE,
+            -270: cv2.ROTATE_90_CLOCKWISE
+        }
+
+        frame_scores = []
+        # Initialize MediaPipe Pose and drawing utilities
+        mp_pose = mp.solutions.pose
+        pose = mp_pose.Pose()
+
+        scanner = Scanner(pose)
+
+        try:
+            frame_number = 0
+            max_frames = 1000
+            frame_skip = FRAME_SKIP
+            while frame_number < max_frames:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+
+                # Apply rotation to counteract metadata-driven rotation
+                if rotation in rotation_map:
+                    frame = cv2.rotate(frame, rotation_map[rotation])
+                    logger.info(f"klatka: {frame_number} (rotated {rotation} degrees), rotacja: {rotation_map[rotation]}")
+
+                logger.info(f"klatka: {frame_number}")
+                frames_dir = Path(__file__).parent / "frames"
+                os.makedirs(frames_dir, exist_ok=True)
+                frame_filename = f"frame_{frame_number:04d}.jpg"
+                frame_path = os.path.join(frames_dir, frame_filename)
+                cv2.imwrite(frame_path, frame)
+
+                scan = scanner.scan(frame_path)
+                # scan = scanner.scan(frame_path, pose)
+                if scan is None:
+                    if os.path.exists(frame_path):
+                        os.remove(frame_path)
+                    logger.info(f"Pominięto klatkę {frame_number} - błąd skanowania")
+                    frame_number += frame_skip
+                    continue
+
+                similarity = Similarity(scan)
+                similarity_scores = similarity.compare_with_exemplary_data()
+                logger.info(similarity_scores)
+                frame_scores.append((frame_path, similarity_scores))
+                frame_number += frame_skip
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+
+        finally:
+            cap.release()
+
+        most_similars_file = self.assign_frames_with_order(frame_scores)
+        if most_similars_file is None:
+            logger.error("Failed to assign frames. Returning empty results.")
+            return {'feedback': [], 'frames': []}  # Or raise an exception if preferred
 
 
-def main():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    user_shots_dir = os.path.join(os.path.dirname(current_dir), "data", "user_shots")
-    scan_film(user_shots_dir)
+        percentage = self.precantage_output(most_similars_file)
+        tab_names = ["follow", "gather", "loading", "release"]
+        for stage in tab_names:
+            feedback_analysis = FeedbackAnalyzer(stage)
+            diffrances = self.differences(most_similars_file[stage][0], stage, scanner)
+            feedback_analysis.analyze_shot_form(diffrances)
+            stage_feedback = {
+                'stage': stage,
+                'result': percentage[stage],
+                'feedback': feedback_analysis.analyze_shot_form(self.differences(most_similars_file[stage][0], stage, scanner))
+            }
+            all_feedback.append(stage_feedback)
+
+        with open(feedback_file, 'w') as plik:
+            json.dump(all_feedback, plik, indent=4)
+        logger.info("\nMost similar System: frames:")
+        logger.info(most_similars_file)
+        logger.info("\n")
+        frames_end = [[most_similars_file['loading'][0],'loading'],[most_similars_file['gather'][0],'gather'],[most_similars_file['release'][0],'release'],[most_similars_file['follow'][0],'follow']]
+        logger.info(percentage)
+        return_json = {'feedback':all_feedback, 'frames':frames_end}
+        pose.close()
+        return return_json
 
 
-if __name__ == '__main__':
-    main()
+# def main():
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#     user_shots_dir = os.path.join(os.path.dirname(current_dir), "data", "user_shots")
+#     scan_film(user_shots_dir)
+#
+#
+# if __name__ == '__main__':
+#     main()
